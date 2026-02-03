@@ -12,7 +12,7 @@ def main():
     # Instantiate and start the server
     tcp_server = TcpServer(
         host="localhost",
-        port=7639
+        port=6379
     )
 
     tcp_server.start()
