@@ -7,6 +7,9 @@ class RedisRequest:
         data = raw_data.split("\r\n")
         print(f"data: {data}")
 
+        if not data:
+            return cls("")
+
         command = data[-2]
 
         return cls(command=command)
