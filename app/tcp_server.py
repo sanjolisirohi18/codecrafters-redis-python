@@ -2,6 +2,7 @@ import socket
 from typing import Tuple
 
 from .models import RedisRequest
+from .router import Router
 class TcpServer:
     def __init__(self, host: str = "localhost", port: int = 6379):
         self.host = host
@@ -23,6 +24,9 @@ class TcpServer:
 
             request = RedisRequest.from_raw_data(raw_data)
             print(f"request: {request}")
+
+            response = Router.route(request=request)
+            print(f"response: {response}")
         except Exception as e:
             print(f"Error handling client")
     
