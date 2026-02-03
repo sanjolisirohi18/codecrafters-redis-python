@@ -24,6 +24,7 @@ class TcpServer:
 
             request = RedisRequest.from_raw_data(raw_data)
             print(f"request: {request}")
+            print(f"request command: {request.command}")
 
             response = Router.route(request=request.command)
             print(f"response: {response}")
