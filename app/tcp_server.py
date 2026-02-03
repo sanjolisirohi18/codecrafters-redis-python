@@ -12,7 +12,7 @@ class TcpServer:
 
         try:
             # Receive data from client
-            raw_data = conn.recv(4096).decode()
+            raw_data = conn.recv(1024).decode()
             print("=============================================================")
 
             if not raw_data:
