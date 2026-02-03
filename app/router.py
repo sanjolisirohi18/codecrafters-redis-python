@@ -15,5 +15,7 @@ class Router:
     def route(self, request: RedisRequest) -> RedisResponse:
         """ Dispatches the request to the correct handler based on the path."""
 
+        print(f"command: {request.command}")
+
         if request.command and request.command in self.route:
             return self.routes[request.command](request)
