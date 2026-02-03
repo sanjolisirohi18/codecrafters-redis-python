@@ -17,5 +17,5 @@ class Router:
 
         print(f"command: {request.command}")
 
-        if request.command and request.command in self.route:
+        if request.command and request.command in self.routes:
             return self.routes[request.command](request)

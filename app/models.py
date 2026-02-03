@@ -22,6 +22,6 @@ class RedisResponse:
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
         # print()
-        response_bytes = self.response.encode()
+        #response_bytes = self.response.encode()
 
-        return f"+{response_bytes}\r\n"
+        return f"+{self.response}\r\n".encode()

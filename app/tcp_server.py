@@ -26,7 +26,7 @@ class TcpServer:
             print(f"request: {request}")
             print(f"request command: {request.command}")
 
-            response = Router.route(request=request)
+            response = Router(command=request.command).route(request=request)
             print(f"response: {response}")
 
             # 4. Send Response
