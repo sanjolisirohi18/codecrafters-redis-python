@@ -27,6 +27,10 @@ class TcpServer:
 
             response = Router.route(request=request)
             print(f"response: {response}")
+
+            # 4. Send Response
+            conn.sendall(response.to_bytes())
+            
         except Exception as e:
             print(f"Error handling client")
     
