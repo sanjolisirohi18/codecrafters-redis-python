@@ -25,12 +25,12 @@ class TcpServer:
             request = RedisRequest.from_raw_data(raw_data)
             print(f"request: {request}")
 
-            response = Router.route(request=request)
+            response = Router.route(request=request.command)
             print(f"response: {response}")
 
             # 4. Send Response
             conn.sendall(response.to_bytes())
-            
+
         except Exception as e:
             print(f"Error handling client")
     
