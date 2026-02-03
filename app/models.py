@@ -6,3 +6,18 @@ class RedisRequest:
     def from_raw_data(cls, raw_data:str) -> 'RedisRequest':
         data = raw_data.split("\r\n")
         print(f"data: {data}")
+
+        command = data[-2]
+
+        return cls(command=command)
+
+class RedisResponse:
+    """Build and format the response sent back to the client. """
+    def __init__(self, response: str):
+        self.response = response
+    
+    def to_bytes(self) -> bytes:
+        """ Generates the final formatted response. """
+        response_bytes = self.response.encode()
+
+        return f"+{response_bytes}\r\n"
