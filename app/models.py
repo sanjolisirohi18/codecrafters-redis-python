@@ -23,5 +23,6 @@ class RedisResponse:
         """ Generates the final formatted response. """
         # print()
         #response_bytes = self.response.encode()
+        print(f"+{self.response}\r\n".encode())
 
         return f"+{self.response}\r\n".encode()
