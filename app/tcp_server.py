@@ -23,6 +23,7 @@ class TcpServer:
                         print(f"No data received from {addr}")
                     
                     print(f"data: {raw_data}")
+                    print("\n")
 
                     request = RedisRequest.from_raw_data(raw_data)
                     print(f"request: {request}")
