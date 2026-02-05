@@ -14,25 +14,25 @@ class TcpServer:
         print(f"Accepted connection on {addr}")
 
         try:
-            while conn:
-                # Receive data from client
-                raw_data = conn.recv(1024).decode()
-                print("=============================================================")
+            #while conn:
+            # Receive data from client
+            raw_data = conn.recv(1024).decode()
+            print("=============================================================")
 
-                if not raw_data:
-                    print(f"No data received from {addr}")
-                
-                print(f"data: {raw_data}")
+            if not raw_data:
+                print(f"No data received from {addr}")
+            
+            print(f"data: {raw_data}")
 
-                request = RedisRequest.from_raw_data(raw_data)
-                print(f"request: {request}")
-                print(f"request command: {request.command}")
+            request = RedisRequest.from_raw_data(raw_data)
+            print(f"request: {request}")
+            print(f"request command: {request.command}")
 
-                response = Router(command=request.command).route(request=request)
-                print(f"response: {response}")
+            response = Router(command=request.command).route(request=request)
+            print(f"response: {response}")
 
-                # 4. Send Response
-                conn.sendall(response.to_bytes())
+            # 4. Send Response
+            conn.sendall(response.to_bytes())
 
         except Exception as e:
             print(f"Error handling client")
