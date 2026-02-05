@@ -1,4 +1,5 @@
 import socket
+import threading
 from typing import Tuple
 
 from .models import RedisRequest
@@ -43,4 +44,10 @@ class TcpServer:
         print(f"server listening on {server_address}")
 
         conn, addr = server_socket.accept() # Wait for client
-        self.handle_client(conn=conn, addr=addr)
+        #self.handle_client(conn=conn, addr=addr)
+        client_thread = threading.Thread(
+            target= self.handle_client,
+            args= (conn, addr)
+        )
+
+        client_thread.start()
