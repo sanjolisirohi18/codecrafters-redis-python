@@ -43,11 +43,16 @@ class TcpServer:
         server_socket = socket.create_server(server_address, reuse_port=True)
         print(f"server listening on {server_address}")
 
-        conn, addr = server_socket.accept() # Wait for client
-        #self.handle_client(conn=conn, addr=addr)
-        client_thread = threading.Thread(
-            target= self.handle_client,
-            args= (conn, addr)
-        )
+        while True:
+            try:
+                conn, addr = server_socket.accept() # Wait for client
+                #self.handle_client(conn=conn, addr=addr)
+                client_thread = threading.Thread(
+                    target= self.handle_client,
+                    args= (conn, addr)
+                )
 
-        client_thread.start()
+                client_thread.start()
+            except Exception as e:
+                print(f"Error acception connection: {e}")
+                break
