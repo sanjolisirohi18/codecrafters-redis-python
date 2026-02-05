@@ -36,6 +36,10 @@ class TcpServer:
 
         except Exception as e:
             print(f"Error handling client")
+        finally:
+            # Close connection when done
+            conn.close()
+            print(f"Connection with {addr} closed.")
     
     def start(self):
         """ Sets up and run the main server loop. """
