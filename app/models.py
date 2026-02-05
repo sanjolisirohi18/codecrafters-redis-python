@@ -1,6 +1,8 @@
+from typing import List
 class RedisRequest:
-    def __init__(self, command: str):
-        self.command = command
+    def __init__(self, command = None, data = None):
+        self.command: str = command
+        self.data: List[str] = data
     
     @classmethod
     def from_raw_data(cls, raw_data:str) -> 'RedisRequest':
@@ -10,9 +12,14 @@ class RedisRequest:
         if not data:
             return cls("")
 
-        command = data[-2]
+        #command = data[-2].lower()
+        command = data[2].lower()
+        command_data = data[3:-1]
 
-        return cls(command=command)
+        print(f"command: {command}")
+        print(f"command data: {command_data}")
+
+        return cls(command=command, data=command_data)
 
 class RedisResponse:
     """Build and format the response sent back to the client. """
