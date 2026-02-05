@@ -16,8 +16,6 @@ class TcpServer:
         try:
             while True:
                 try:
-                    #while conn:
-                    # Receive data from client
                     raw_data = conn.recv(1024).decode()
                     print("=============================================================")
 
@@ -37,7 +35,7 @@ class TcpServer:
                     conn.sendall(response.to_bytes())
 
                 except Exception as e:
-                    print(f"Error handling client")
+                    print(f"Error handling client: {e}")
         finally:
             # Close connection when done
             conn.close()
@@ -52,12 +50,10 @@ class TcpServer:
         while True:
             try:
                 conn, addr = server_socket.accept() # Wait for client
-                #self.handle_client(conn=conn, addr=addr)
                 client_thread = threading.Thread(
                     target= self.handle_client,
                     args= (conn, addr)
                 )
-
                 client_thread.start()
             except Exception as e:
                 print(f"Error acception connection: {e}")
