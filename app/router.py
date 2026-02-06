@@ -1,15 +1,17 @@
-from typing import Dict, Callable
+from typing import Dict, Callable, List
 
 from .models import RedisResponse, RedisRequest
-from .handler import handle_ping_command
+from .handler import handle_ping_command, handle_echo_command
 
 class Router:
     """ Maps requests to specific handler functions. """
     
-    def __init__(self, command: str):
-        self.command = command
+    def __init__(self, command = None, data = None):
+        self.command: str = command
+        self.data: List[str] = data
         self.routes: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
-            "PING": handle_ping_command
+            "ping": handle_ping_command,
+            "echo": handle_echo_command,
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:
