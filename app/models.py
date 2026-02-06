@@ -38,13 +38,9 @@ class RedisResponse:
 
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
-        # print()
-        #response_bytes = self.response.encode()
-        #print(f"+{self.response}\r\n".encode())
 
         if self.command == "ping":
             return self.ping_command_response().encode()
         else:
             return self.echo_command_response().encode()
 
-        #return f"+{self.response}\r\n".encode()
