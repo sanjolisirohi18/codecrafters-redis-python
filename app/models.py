@@ -23,13 +23,28 @@ class RedisRequest:
 
 class RedisResponse:
     """Build and format the response sent back to the client. """
-    def __init__(self, response: str):
-        self.response = response
+    def __init__(self, response = None, length = None, command = None):
+        self.response: str = response
+        self.length: str = length
+        self.command: str = command
     
+    def ping_command_response(self) -> str:
+        """ Generate respone for ping command. """
+        return f"+{self.response}\r\n"
+    
+    def echo_command_response(self) -> str:
+        """ Generate a response for echo command. """
+        return f"{self.length}\r\n{self.response}\r\n"
+
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
         # print()
         #response_bytes = self.response.encode()
-        print(f"+{self.response}\r\n".encode())
+        #print(f"+{self.response}\r\n".encode())
 
-        return f"+{self.response}\r\n".encode()
+        if self.command == "ping":
+            return self.ping_command_response().encode()
+        else:
+            return self.echo_command_response().encode()
+
+        #return f"+{self.response}\r\n".encode()
