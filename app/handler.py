@@ -39,4 +39,7 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     key: str = request.data[1]
     value: str = DATA_STORE.get(key, None)
 
-    return RedisResponse(response=value, command=request.command)
+    if value is None:
+        return RedisResponse(response=None, command=request.command)
+
+    return RedisResponse(response=value, length=f"{len(value)}", command=request.command)
