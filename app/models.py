@@ -38,7 +38,7 @@ class RedisResponse:
         if not self.response:
             return f"$-1\r\n"
         
-        return f"{self.length}\r\n{self.response}\r\n"
+        return f"${self.length}\r\n{self.response}\r\n"
     
     # def ping_command_response(self) -> str:
     #     """ Generate respone for ping command. """
