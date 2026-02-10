@@ -57,5 +57,8 @@ class RedisResponse:
         if self.command == "set":
             return self.simple_string_response().encode()
         
+        if self.command == "get":
+            return self.bulk_string_response().encode()
+        
         return self.bulk_string_response().encode()
 

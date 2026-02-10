@@ -24,8 +24,8 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     Stores a value in DATA_STORE
     """
     # Data Structure: [key_len, key, value_len, value]
-    key = request.data[1]
-    value = request.data[3]
+    key: str = request.data[1]
+    value: str = request.data[3]
     
     DATA_STORE[key] = value
 
@@ -36,4 +36,7 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     Handler for get command. 
     Retrieves data from DATA_STORE
     """
-    pass
+    key: str = request.data[1]
+    value: str = DATA_STORE.get(key, None)
+
+    return RedisResponse(response=value, command=request.command)
