@@ -58,6 +58,7 @@ class RedisResponse:
             return self.simple_string_response().encode()
         
         if self.command == "get":
+            print(f"self.response: {self.response}")
             return self.bulk_string_response().encode()
         
         return self.bulk_string_response().encode()
