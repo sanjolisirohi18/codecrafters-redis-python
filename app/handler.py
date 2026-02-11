@@ -52,11 +52,14 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     value: str = DATA_STORE.get(key, None)
     print(f"value: {value}")
 
-    if 'PX' in value:
+    if value is None:
+        return RedisResponse(response=None, command=request.command)
+
+    if 'PX' in value.options:
         if curr_time > value["start_time"] + timedelta(milliseconds=int(value["PX"])):
             return RedisResponse(response=None, command=request.command)
 
     # if value.get(key_value) is None:
     #     return RedisResponse(response=None, command=request.command)
 
-    return RedisResponse(response=value, length=f"{len(value)}", command=request.command)
+    return RedisResponse(response=value.value, length=f"{len(value.value)}", command=request.command)
