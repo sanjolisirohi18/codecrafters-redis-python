@@ -39,6 +39,7 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     print(f"key_dict: {key_dict}")
     
     DATA_STORE[key] = key_dict
+    print(f"DATA_STORE: {DATA_STORE}")
 
     return RedisResponse(response="OK", command=request.command)
 
