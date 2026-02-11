@@ -15,7 +15,7 @@ def handle_echo_command(request: RedisRequest) -> RedisResponse:
     print(f"Redis command: {request.command}")
     print(f"Redis data: {request.data}")
 
-    response: str = request.data[1]
+    response: str = request.data[0]
 
     return RedisResponse(response=response, length=f"{len(response)}", command=request.command)
 
