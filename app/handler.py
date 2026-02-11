@@ -33,7 +33,7 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     key_dict["key_value"] = value
     key_dict["start_time"] = datetime.now()
 
-    for i in range(2, len(request.data)-2, 2):
+    for i in range(2, len(request.data)-1, 2):
         key_dict[i] = i+1
     
     print(f"key_dict: {key_dict}")
