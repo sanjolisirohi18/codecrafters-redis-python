@@ -1,6 +1,10 @@
+from typing import Dict
+from collections import defaultdict
+from datetime import datetime, timedelta
 from .models import RedisRequest, RedisResponse
 
-DATA_STORE = {}
+# {key: {key_value: "", optional_argument_1: "", start_time: }}
+DATA_STORE: Dict[str, Dict[str, str|int]] = defaultdict(dict)
 
 # Handler Functions
 
@@ -23,10 +27,18 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     Stores a value in DATA_STORE
     """
     # Data Structure: [key_len, key, value_len, value]
-    key: str = request.data[1]
-    value: str = request.data[3]
+    key: str = request.data[0]
+    value: str = request.data[1]
+    key_dict: Dict = {}
+    key_dict["key_value"] = value
+    key_dict["start_time"] = datetime.now()
+
+    for i in range(2, len(request.data)-2, 2):
+        key_dict[i] = i+1
     
-    DATA_STORE[key] = value
+    print(f"key_dict: {key_dict}")
+    
+    DATA_STORE[key] = key_dict
 
     return RedisResponse(response="OK", command=request.command)
 
@@ -35,7 +47,7 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     Handler for get command. 
     Retrieves data from DATA_STORE
     """
-    key: str = request.data[1]
+    key: str = request.data[0]
     value: str = DATA_STORE.get(key, None)
 
     if value is None:
