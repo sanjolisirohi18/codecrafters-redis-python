@@ -49,17 +49,17 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     """
     curr_time: datetime = datetime.now()
     key: str = request.data[0]
-    value: str = DATA_STORE.get(key, None)
-    print(f"value: {value}")
+    redis_value: str = DATA_STORE.get(key, None)
+    print(f"value: {redis_value}")
 
-    if value is None:
+    if redis_value is None:
         return RedisResponse(response=None, command=request.command)
 
-    if 'PX' in value.options:
-        if curr_time > value["start_time"] + timedelta(milliseconds=int(value["PX"])):
+    if 'PX' in redis_value.options:
+        if curr_time > redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"])):
             return RedisResponse(response=None, command=request.command)
 
     # if value.get(key_value) is None:
     #     return RedisResponse(response=None, command=request.command)
 
-    return RedisResponse(response=value.value, length=f"{len(value.value)}", command=request.command)
+    return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
