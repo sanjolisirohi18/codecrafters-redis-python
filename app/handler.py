@@ -1,4 +1,3 @@
-from typing import Dict
 from datetime import datetime, timedelta
 from .models import RedisRequest, RedisResponse, RedisValue
 
@@ -58,8 +57,5 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     if 'PX' in redis_value.options:
         if curr_time > redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"])):
             return RedisResponse(response=None, command=request.command)
-
-    # if value.get(key_value) is None:
-    #     return RedisResponse(response=None, command=request.command)
 
     return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
