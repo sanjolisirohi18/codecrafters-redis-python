@@ -35,7 +35,7 @@ class RedisResponse:
     def bulk_string_response(self) -> str:
         """ Generare bulk string response. """
 
-        if not self.response:
+        if self.response is None:
             return f"$-1\r\n"
         
         return f"${self.length}\r\n{self.response}\r\n"
