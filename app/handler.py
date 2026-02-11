@@ -31,7 +31,7 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     options_dict: dict = {}
 
     for i in range(2, len(request.data)-1, 2):
-        options_dict[request.data[i]].upper() = int(request.data[i+1])
+        options_dict[request.data[i].upper()] = int(request.data[i+1])
     
     
     DATA_STORE[key] = RedisValue(
