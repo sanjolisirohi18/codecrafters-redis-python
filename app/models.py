@@ -13,8 +13,16 @@ class RedisRequest:
             return cls("")
 
         #command = data[-2].lower()
-        command = data[2].lower()
-        command_data = data[3:-1]
+        # command = data[2].lower()
+        # command_data = data[3:-1]
+        actual_values: List[str] = data[2::2]
+        print(f"actual_values: {actual_values}")
+
+        if not actual_values:
+            return cls("")
+        
+        command: str = actual_values[0].lower()
+        command_data: List[str] = actual_values[1:]
 
         print(f"command: {command}")
         print(f"command data: {command_data}")
