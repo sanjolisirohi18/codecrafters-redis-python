@@ -1,10 +1,8 @@
 from typing import Dict
-from collections import defaultdict
 from datetime import datetime, timedelta
-from .models import RedisRequest, RedisResponse
+from .models import RedisRequest, RedisResponse, RedisValue
 
-# {key: {key_value: "", optional_argument_1: "", start_time: }}
-DATA_STORE: Dict[str, Dict[str, str|int]] = defaultdict(dict)
+DATA_STORE = {}
 
 # Handler Functions
 
@@ -29,16 +27,17 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     # Data Structure: [key_len, key, value_len, value]
     key: str = request.data[0]
     value: str = request.data[1]
-    key_dict: Dict = {}
-    key_dict["key_value"] = value
-    key_dict["start_time"] = datetime.now()
+
+    options_dict: dict = {}
 
     for i in range(2, len(request.data)-1, 2):
-        key_dict[request.data[i]] = request.data[i+1]
+        options_dict[request.data[i]].upper() = int(request.data[i+1])
     
-    print(f"key_dict: {key_dict}")
     
-    DATA_STORE[key] = key_dict
+    DATA_STORE[key] = RedisValue(
+        value=value,
+        options=options_dict
+    )
     print(f"DATA_STORE: {DATA_STORE}")
 
     return RedisResponse(response="OK", command=request.command)
@@ -48,11 +47,16 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     Handler for get command. 
     Retrieves data from DATA_STORE
     """
+    curr_time: datetime = datetime.now()
     key: str = request.data[0]
     value: str = DATA_STORE.get(key, None)
     print(f"value: {value}")
 
-    if value is None:
+    if 'PX' in value:
+        if curr_time > value["start_time"] + timedelta(milliseconds=int(value["PX"])):
+            return RedisResponse(response=None, command=request.command)
+
+    if value.get(key_value) is None:
         return RedisResponse(response=None, command=request.command)
 
     return RedisResponse(response=value, length=f"{len(value)}", command=request.command)

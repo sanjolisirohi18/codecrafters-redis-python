@@ -1,4 +1,12 @@
-from typing import List
+from typing import List, Any, Dict
+from dataclasses import dataclass, field
+from datetime import datetime
+
+@dataclass
+class RedisValue:
+    value: str
+    start_time: datetime = field(default_factory=datetime.now())
+    options: Dict[str, Any] = field(default_factory=dict)
 class RedisRequest:
     def __init__(self, command = None, data = None):
         self.command: str = command
