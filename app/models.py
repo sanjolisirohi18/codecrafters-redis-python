@@ -73,20 +73,16 @@ class RedisResponse:
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
 
-        if self.command == "ping":
+        if self.command in {"ping", "set"}:
             return self.simple_string_response().encode()
         
-        if self.command == "set":
-            return self.simple_string_response().encode()
-        
-        if self.command == "get":
-            print(f"self.response: {self.response}")
+        if self.command in {"get", "lpop"}:
             return self.bulk_string_response().encode()
         
-        if self.command == "rpush" or self.command == "lpush" or self.command == "llen":
+        if self.command in {"rpush", "lpush", "llen"}:
             return self.integer_response().encode()
         
-        if self.command == "lrange":
+        if self.command in {"lrange"}:
             return self.array_response().encode()
         
         return self.bulk_string_response().encode()
