@@ -112,10 +112,13 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
 
     if key not in DATA_STORE:
         return RedisResponse(response=None, length='0', command=request.command)
-    
-    element: str = DATA_STORE[key].popleft()
 
-    return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
+    result: List[str] = []
+
+    for i in range(request.data[1]):
+        result.append(DATA_STORE[key].popleft())
+
+    return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
 def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
