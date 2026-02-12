@@ -77,13 +77,13 @@ class RedisResponse:
         if self.command in {"ping", "set"}:
             return self.simple_string_response().encode()
         
-        if self.command in {"get", "lpop"}:
+        if self.command in {"get"}:
             return self.bulk_string_response().encode()
         
         if self.command in {"rpush", "lpush", "llen"}:
             return self.integer_response().encode()
         
-        if self.command in {"lrange"}:
+        if self.command in {"lrange", "lpop"}:
             return self.array_response().encode()
         
         return self.bulk_string_response().encode()
