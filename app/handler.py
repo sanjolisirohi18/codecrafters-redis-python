@@ -105,6 +105,18 @@ def handle_llen_command(request: RedisRequest) -> RedisResponse:
     
     return RedisResponse(response=None, length=f"{value_length}", command=request.command)
 
+def handle_lpop_command(request: RedisRequest) -> RedisRequest:
+    """ Handler for LPOP command. """
+
+    key: str = request.data[0]
+
+    if key not in DATA_STORE:
+        return RedisResponse(response=None, length='0', command=request.command)
+    
+    element: str = DATA_STORE[key].popleft()
+
+    return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
+
 def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
 
