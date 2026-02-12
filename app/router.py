@@ -5,7 +5,8 @@ from .handler import (
     handle_ping_command, 
     handle_echo_command,
     handle_set_command,
-    handle_get_command
+    handle_get_command,
+    handle_rpush_command
 )
 
 class Router:
@@ -19,6 +20,7 @@ class Router:
             "echo": handle_echo_command,
             "set": handle_set_command,
             "get": handle_get_command,
+            "rpush": handle_rpush_command,
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:

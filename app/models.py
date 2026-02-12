@@ -52,6 +52,10 @@ class RedisResponse:
             return f"$-1\r\n"
         
         return f"${self.length}\r\n{self.response}\r\n"
+    
+    def integer_response(self) -> str:
+        """ Generate integer response. """
+        return f":{self.length}\r\n"
 
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
@@ -65,6 +69,9 @@ class RedisResponse:
         if self.command == "get":
             print(f"self.response: {self.response}")
             return self.bulk_string_response().encode()
+        
+        if self.command == "rpush":
+            return self.integer_response().encode()
         
         return self.bulk_string_response().encode()
 

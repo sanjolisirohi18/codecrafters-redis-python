@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+from typing import List
+
 from .models import RedisRequest, RedisResponse, RedisValue
 
 DATA_STORE = {}
@@ -63,9 +65,15 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
 
-    key: str = request[0]
+    key: str = request.data[0]
 
     if key not in DATA_STORE:
         DATA_STORE[key] = []
     
+    values: List[str] = request.data[1:]
+
+    for value in values:
+        DATA_STORE[key].append(value)
+    
+    return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
     
