@@ -115,7 +115,7 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
 
     result: List[str] = []
 
-    for i in range(request.data[1]):
+    for i in range(int(request.data[1])):
         result.append(DATA_STORE[key].popleft())
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
