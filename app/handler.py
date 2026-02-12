@@ -76,4 +76,30 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         DATA_STORE[key].append(value)
     
     return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
+
+def handle_lrange_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for LRANGE command. """
+
+    key: str = request.data[0]
+    start_index: int = int(request.data[1])
+    end_index: int = int(request.data[2])
+
+    if start_index > end_index:
+        return RedisResponse(response=[], length='0', command=request.command)
+
+    if key not in DATA_STORE:
+        return RedisResponse(response=[], length='0', command=request.command)
+    
+    value_length: int = len(DATA_STORE[key])
+
+    if start_index >= value_length:
+        return RedisResponse(response=[], length='0', command=request.command)
+    
+    if end_index >= value_length:
+        end_index = value_length - 1
+    
+    result: List[str] = DATA_STORE[key][start_index: end_index+1]
+
+    return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
+
     

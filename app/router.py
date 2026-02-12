@@ -6,7 +6,8 @@ from .handler import (
     handle_echo_command,
     handle_set_command,
     handle_get_command,
-    handle_rpush_command
+    handle_rpush_command,
+    handle_lrange_command,
 )
 
 class Router:

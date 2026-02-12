@@ -37,7 +37,7 @@ class RedisRequest:
 class RedisResponse:
     """Build and format the response sent back to the client. """
     def __init__(self, response = None, length = None, command = None):
-        self.response: str = response
+        self.response: Any = response
         self.length: str = length
         self.command: str = command
     
@@ -56,6 +56,19 @@ class RedisResponse:
     def integer_response(self) -> str:
         """ Generate integer response. """
         return f":{self.length}\r\n"
+    
+    def array_response(self) -> str:
+        """ Generate array response. """
+
+        result: List[str] = []
+
+        for value in self.response:
+            result.append(f"${len(value)}")
+            result.append(value)
+        
+        print("\r\n".join(result))
+
+        return f"*{self.length}\r\n{"\r\n".join(result)}"
 
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
@@ -72,6 +85,9 @@ class RedisResponse:
         
         if self.command == "rpush":
             return self.integer_response().encode()
+        
+        if self.command == "lrange":
+            return self.array_response().encode()
         
         return self.bulk_string_response().encode()
 
