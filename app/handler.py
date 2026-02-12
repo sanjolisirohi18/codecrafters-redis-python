@@ -114,7 +114,7 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
         return RedisResponse(response=[], length='0', command=request.command)
 
     result: List[str] = []
-    counter: int = int(request.data[1]) if len(request.data) > 2 else 1
+    counter: int = int(request.data[1]) if len(request.data) > 1 else 1
 
     for i in range(counter):
         result.append(DATA_STORE[key].popleft())
