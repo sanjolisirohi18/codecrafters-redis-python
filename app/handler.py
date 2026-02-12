@@ -122,8 +122,6 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
         element: str = DATA_STORE[key].popleft()
 
         return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
-    
-    print(f"result in lpop: {result}")
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
