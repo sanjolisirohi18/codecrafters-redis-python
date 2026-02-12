@@ -8,6 +8,7 @@ from .handler import (
     handle_get_command,
     handle_rpush_command,
     handle_lrange_command,
+    handle_lpush_command,
 )
 
 class Router:
@@ -22,6 +23,7 @@ class Router:
             "set": handle_set_command,
             "get": handle_get_command,
             "rpush": handle_rpush_command,
+            "lpush": handle_lpush_command,
             "lrange": handle_lrange_command
         }
     

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List
+from collections import deque
 
 from .models import RedisRequest, RedisResponse, RedisValue
 
@@ -68,12 +69,27 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     key: str = request.data[0]
 
     if key not in DATA_STORE:
-        DATA_STORE[key] = []
+        DATA_STORE[key] = deque([])
     
     values: List[str] = request.data[1:]
 
     for value in values:
         DATA_STORE[key].append(value)
+    
+    return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
+
+def handle_lpush_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for LPUSH command. """
+
+    key: str = request.data[0]
+
+    if key not in DATA_STORE:
+        DATA_STORE[key] = deque([])
+    
+    values: List[str] = request.data[1:]
+
+    for value in values:
+        DATA_STORE[key].appendleft(value)
     
     return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
 
@@ -101,8 +117,12 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     if end_index >= value_length:
         end_index = value_length - 1
     
-    result: List[str] = DATA_STORE[key][start_index: end_index+1]
+    result: List[str] = []
+
+    for i in range(start_index, end_index+1):
+        result.append(DATA_STORE[key][i])
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
+
 
     
