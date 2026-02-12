@@ -76,9 +76,9 @@ class RedisResponse:
 
         if self.command == "lpop":
             if isinstance(self.response, str):
-                return self.array_response().encode()
-            else:
                 return self.bulk_string_response().encode()
+            else:
+                return self.array_response().encode()
 
         if self.command in {"ping", "set"}:
             return self.simple_string_response().encode()
