@@ -22,6 +22,7 @@ class Router:
             "set": handle_set_command,
             "get": handle_get_command,
             "rpush": handle_rpush_command,
+            "lrange": handle_lrange_command
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:
