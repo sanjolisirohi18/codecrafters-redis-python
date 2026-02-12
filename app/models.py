@@ -83,7 +83,7 @@ class RedisResponse:
             print(f"self.response: {self.response}")
             return self.bulk_string_response().encode()
         
-        if self.command == "rpush" or self.command == "lpush":
+        if self.command == "rpush" or self.command == "lpush" or self.command == "llen":
             return self.integer_response().encode()
         
         if self.command == "lrange":
