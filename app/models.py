@@ -20,9 +20,6 @@ class RedisRequest:
         if not data:
             return cls("")
 
-        #command = data[-2].lower()
-        # command = data[2].lower()
-        # command_data = data[3:-1]
         actual_values: List[str] = data[2::2]
         print(f"actual_values: {actual_values}")
 
@@ -55,14 +52,6 @@ class RedisResponse:
             return f"$-1\r\n"
         
         return f"${self.length}\r\n{self.response}\r\n"
-    
-    # def ping_command_response(self) -> str:
-    #     """ Generate respone for ping command. """
-    #     return f"+{self.response}\r\n"
-    
-    # def echo_command_response(self) -> str:
-    #     """ Generate a response for echo command. """
-    #     return f"{self.length}\r\n{self.response}\r\n"
 
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """

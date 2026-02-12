@@ -10,7 +10,7 @@ def handle_ping_command(request: RedisRequest) -> RedisResponse:
     return RedisResponse(response="PONG", command=request.command)
 
 def handle_echo_command(request: RedisRequest) -> RedisResponse:
-    """ Hanlder for echo command. """
+    """ Hanlder for ECHO command. """
     print(f"Redis command: {request.command}")
     print(f"Redis data: {request.data}")
 
@@ -20,7 +20,7 @@ def handle_echo_command(request: RedisRequest) -> RedisResponse:
 
 def handle_set_command(request: RedisRequest) -> RedisResponse:
     """ 
-    Handler for set command. 
+    Handler for SET command. 
     Stores a value in DATA_STORE
     """
     # Data Structure: [key_len, key, value_len, value]
@@ -43,7 +43,7 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
 
 def handle_get_command(request: RedisRequest) -> RedisRequest:
     """ 
-    Handler for get command. 
+    Handler for GET command. 
     Retrieves data from DATA_STORE
     """
     curr_time: datetime = datetime.now()
@@ -59,3 +59,13 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
             return RedisResponse(response=None, command=request.command)
 
     return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
+
+def handle_rpush_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for RPUSH command. """
+
+    key: str = request[0]
+
+    if key not in DATA_STORE:
+        DATA_STORE[key] = []
+    
+    
