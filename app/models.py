@@ -61,6 +61,7 @@ class RedisResponse:
         """ Generate array response. """
 
         result: List[str] = []
+        print(f"self.response: {self.response}")
 
         for value in self.response:
             result.append(f"${len(value)}")
