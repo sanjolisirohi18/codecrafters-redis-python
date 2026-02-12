@@ -81,16 +81,19 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
 
     key: str = request.data[0]
-    start_index: int = int(request.data[1])
-    end_index: int = int(request.data[2])
-
-    if start_index > end_index:
-        return RedisResponse(response=[], length='0', command=request.command)
 
     if key not in DATA_STORE:
         return RedisResponse(response=[], length='0', command=request.command)
     
     value_length: int = len(DATA_STORE[key])
+    start_index: int = int(request.data[1]) if int(request.data[1]) >= 0 else value_length + int(request.data[1])
+    end_index: int = int(request.data[2]) if int(request.data[2]) >= 0 else value_length + int(request.data[2])
+
+    if start_index < 0:
+        start_index = 0
+
+    if start_index > end_index:
+        return RedisResponse(response=[], length='0', command=request.command)
 
     if start_index >= value_length:
         return RedisResponse(response=[], length='0', command=request.command)
