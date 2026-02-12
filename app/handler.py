@@ -111,7 +111,7 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
     key: str = request.data[0]
 
     if key not in DATA_STORE:
-        return RedisResponse(response=None, length='0', command=request.command)
+        return RedisResponse(response=[], length='0', command=request.command)
 
     result: List[str] = []
 
