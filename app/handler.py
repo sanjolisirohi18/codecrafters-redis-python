@@ -99,6 +99,7 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
         end_index = value_length - 1
     
     result: List[str] = DATA_STORE[key][start_index: end_index+1]
+    print(f"result: {result}")
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
