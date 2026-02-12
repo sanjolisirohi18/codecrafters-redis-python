@@ -65,10 +65,11 @@ class RedisResponse:
         for value in self.response:
             result.append(f"${len(value)}")
             result.append(value)
+            result.append("\r\n")
         
-        print("\r\n".join(result))
+        print(f"result: {result}")
 
-        return f"*{self.length}\r\n{"\r\n".join(result)}\r\n"
+        return f"*{self.length}\r\n{result}"
 
     def to_bytes(self) -> bytes:
         """ Generates the final formatted response. """
