@@ -64,6 +64,7 @@ class RedisResponse:
 
         for value in self.response:
             result.append(f"${len(value)}")
+            result.append("\r\n")
             result.append(value)
             result.append("\r\n")
         
