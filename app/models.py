@@ -67,8 +67,6 @@ class RedisResponse:
             result.append("\r\n")
             result.append(value)
             result.append("\r\n")
-        
-        print(f"result: {result}")
 
         return f"*{self.length}\r\n{"".join(result)}"
 
