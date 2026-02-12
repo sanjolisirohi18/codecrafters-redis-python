@@ -9,6 +9,7 @@ from .handler import (
     handle_rpush_command,
     handle_lrange_command,
     handle_lpush_command,
+    handle_llen_command
 )
 
 class Router:
@@ -24,7 +25,8 @@ class Router:
             "get": handle_get_command,
             "rpush": handle_rpush_command,
             "lpush": handle_lpush_command,
-            "lrange": handle_lrange_command
+            "lrange": handle_lrange_command,
+            "llen": handle_llen_command,
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:

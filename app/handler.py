@@ -93,6 +93,18 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
     
     return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
 
+def handle_llen_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for LLEN command. """
+
+    key: str = request.data[0]
+
+    if key not in DATA_STORE:
+        return RedisResponse(response=[], length='0', command=request.command)
+    
+    value_length: int = len(DATA_STORE[key])
+    
+    return RedisResponse(response=None, length=f"{value_length}", command=request.command)
+
 def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
 
