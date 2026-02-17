@@ -30,7 +30,7 @@ class Router:
             "lrange": handle_lrange_command,
             "llen": handle_llen_command,
             "lpop": handle_lpop_command,
-            "blop": handle_blpop_command,
+            "blpop": handle_blpop_command,
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:

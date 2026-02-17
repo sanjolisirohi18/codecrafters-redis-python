@@ -33,6 +33,8 @@ class TcpServer:
                     if response:
                         conn.sendall(response.to_bytes())
 
+                except (ConnectionResetError, BrokenPipeError):
+                    print(f"Client {addr} disconnected abruptly.")
                 except Exception as e:
                     print(f"Error handling client: {e}")
         finally:
