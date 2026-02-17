@@ -1,3 +1,5 @@
+import threading
+
 from datetime import datetime, timedelta
 from typing import List
 from collections import deque
@@ -5,6 +7,7 @@ from collections import deque
 from .models import RedisRequest, RedisResponse, RedisValue
 
 DATA_STORE = {}
+DATA_CONDITION = threading.Condition()
 
 # Handler Functions
 
@@ -68,13 +71,16 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
 
     key: str = request.data[0]
 
-    if key not in DATA_STORE:
-        DATA_STORE[key] = deque([])
-    
-    values: List[str] = request.data[1:]
+    with DATA_CONDITION:
+        if key not in DATA_STORE:
+            DATA_STORE[key] = deque([])
+        
+        values: List[str] = request.data[1:]
 
-    for value in values:
-        DATA_STORE[key].append(value)
+        for value in values:
+            DATA_STORE[key].append(value)
+        
+        DATA_CONDITION.notify_all()
     
     return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
 
@@ -83,15 +89,46 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
 
     key: str = request.data[0]
 
-    if key not in DATA_STORE:
-        DATA_STORE[key] = deque([])
-    
-    values: List[str] = request.data[1:]
+    with DATA_CONDITION:
+        if key not in DATA_STORE:
+            DATA_STORE[key] = deque([])
+        
+        values: List[str] = request.data[1:]
 
-    for value in values:
-        DATA_STORE[key].appendleft(value)
+        for value in values:
+            DATA_STORE[key].appendleft(value)
+        
+        DATA_CONDITION.notify_all()
     
     return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
+
+def handle_blpop_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for BLPOP command. """
+
+    keys: List[str] = request.data[:-1]
+    timeout: float = float(request.data[-1])
+
+    end_time: float = datetime.now() + timedelta(seconds=timeout) if timeout > 0 else None
+
+    with DATA_CONDITION:
+        while True:
+            # Check if any of the keys have data
+            for key in keys:
+                if key in DATA_STORE and len(DATA_STORE[key]) > 0:
+                    element: str = DATA_STORE[key].popleft()
+
+                    # BLOP returns [key, value]
+                    return RedisResponse(response=[key, element], length="2", command=request.command)
+            
+            if timeout > 0:
+                remaining: float = (end_time - datetime.now()).total_seconds()
+
+                if remaining <= 0:
+                    return RedisResponse(response=None, command=request.command)
+                
+                DATA_CONDITION.wait(timeout=remaining)
+            else:
+                DATA_CONDITION.wait()
 
 def handle_llen_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LLEN command. """

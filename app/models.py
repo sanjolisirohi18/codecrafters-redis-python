@@ -60,6 +60,9 @@ class RedisResponse:
     def array_response(self) -> str:
         """ Generate array response. """
 
+        if self.response == None:
+            return f"*-1\r\n"
+
         result: List[str] = []
 
         for value in self.response:
@@ -88,7 +91,7 @@ class RedisResponse:
         if self.command in {"rpush", "lpush", "llen"}:
             return self.integer_response().encode()
         
-        if self.command in {"lrange", "lpop"}:
+        if self.command in {"lrange", "blpop"}:
             return self.array_response().encode()
         
         return self.bulk_string_response().encode()
