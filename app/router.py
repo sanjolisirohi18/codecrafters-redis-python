@@ -41,4 +41,5 @@ class Router:
         if request.command and request.command in self.routes:
             return self.routes[request.command](request)
         
-        #return RedisResponse(response="Error: Unknown Command", command="error")
+        err_msg = "Error: Unknown Command"
+        return RedisResponse(response=err_msg, length=str(len(err_msg)), command="error")
