@@ -122,6 +122,7 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
             
             if timeout > 0:
                 remaining: float = (end_time - datetime.now()).total_seconds()
+                print(f"remaining: {remaining}")
 
                 if remaining <= 0:
                     return RedisResponse(response=None, command=request.command)
