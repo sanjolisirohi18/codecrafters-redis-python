@@ -60,7 +60,7 @@ class RedisResponse:
     def array_response(self) -> str:
         """ Generate array response. """
 
-        if self.response == None:
+        if self.response is None:
             return f"*-1\r\n"
 
         result: List[str] = []
