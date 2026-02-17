@@ -70,19 +70,19 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
 
     key: str = request.data[0]
+    values: List[str] = request.data[1:]
 
     with DATA_CONDITION:
-        if key not in DATA_STORE:
+        if key not in DATA_STORE or not isinstance(DATA_STORE[key], deque):
             DATA_STORE[key] = deque([])
-        
-        values: List[str] = request.data[1:]
 
         for value in values:
             DATA_STORE[key].append(value)
         
-        DATA_CONDITION.notify_all()
+        count: int = len(DATA_STORE[key])
+        DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
-    return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
+    return RedisResponse(response=None, length=f"{count}", command=request.command)
 
 def handle_lpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LPUSH command. """
@@ -121,11 +121,16 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
                     return RedisResponse(response=[key, element], length="2", command=request.command)
             
             if timeout > 0:
-                remaining: float = (end_time - datetime.now()).total_seconds()
+                now = datetime.now()
+
+                if now >= end_time:
+                    return RedisResponse(response=None, command=request.command)
+
+                remaining = (end_time - now).total_seconds()
                 print(f"remaining: {remaining}")
 
-                if remaining <= 0:
-                    return RedisResponse(response=None, command=request.command)
+                # if remaining <= 0:
+                #     return RedisResponse(response=None, command=request.command)
                 
                 DATA_CONDITION.wait(timeout=remaining)
             else:
