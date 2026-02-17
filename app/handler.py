@@ -108,9 +108,10 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
     keys: List[str] = request.data[:-1]
     timeout: float = float(request.data[-1])
 
-    end_time: float = datetime.now() + timedelta(seconds=timeout) if timeout > 0 else None
+    #end_time: float = datetime.now() + timedelta(seconds=timeout) if timeout > 0 else None
 
     with DATA_CONDITION:
+        start_wait = datetime.now()
         while True:
             # Check if any of the keys have data
             for key in keys:
@@ -121,16 +122,11 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
                     return RedisResponse(response=[key, element], length="2", command=request.command)
             
             if timeout > 0:
-                now = datetime.now()
+                elapsed = (datetime.now() - start_wait).total_seconds()
+                remaining = timeout - elapsed
 
-                if now >= end_time:
+                if remaining <= 0:
                     return RedisResponse(response=None, command=request.command)
-
-                remaining = (end_time - now).total_seconds()
-                print(f"remaining: {remaining}")
-
-                # if remaining <= 0:
-                #     return RedisResponse(response=None, command=request.command)
                 
                 DATA_CONDITION.wait(timeout=remaining)
             else:
