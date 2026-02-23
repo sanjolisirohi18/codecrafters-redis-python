@@ -12,6 +12,7 @@ from .handler import (
     handle_llen_command,
     handle_lpop_command,
     handle_blpop_command,
+    handle_type_command
 )
 
 class Router:
@@ -31,6 +32,7 @@ class Router:
             "llen": handle_llen_command,
             "lpop": handle_lpop_command,
             "blpop": handle_blpop_command,
+            "type": handle_type_command,
         }
     
     def route(self, request: RedisRequest) -> RedisResponse:

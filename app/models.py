@@ -82,7 +82,7 @@ class RedisResponse:
             else:
                 return self.array_response().encode()
 
-        if self.command in {"ping", "set"}:
+        if self.command in {"ping", "set", "type"}:
             return self.simple_string_response().encode()
         
         if self.command in {"get"}:
