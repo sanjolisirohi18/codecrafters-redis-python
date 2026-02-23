@@ -66,6 +66,16 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
 
     return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
 
+def handle_type_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for TYPE command. """
+    key: str = request.data[0]
+    value: str = DATA_STORE.get(key, None)
+
+    if value is None:
+        return RedisResponse(response="none", command=request.command)
+
+    return RedisResponse(response=type(value), command=request.command)
+
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
 
