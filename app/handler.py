@@ -4,12 +4,29 @@ from datetime import datetime, timedelta
 from typing import List
 from collections import deque
 
-from .models import RedisRequest, RedisResponse, RedisValue
+from .models import RedisRequest, RedisResponse, RedisValue, RedisType
 
 DATA_STORE = {}
 DATA_CONDITION = threading.Condition()
 
 # Handler Functions
+
+def get_valid_value(key: str):
+    """ Helper to get value from store and check expiration. """
+
+    if key not in DATA_STORE:
+        return None
+    
+    redis_value = DATA_STORE[key]
+
+    if 'PX' in redis_value.options:
+        expiry_time: datetime = redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"]))
+
+        if datetime.now() > expiry_time:
+            #del datetime[key]
+            return None
+    
+    return redis_value
 
 def handle_ping_command(request: RedisRequest) -> RedisResponse:
     """ Handler for PING command. """
@@ -38,12 +55,13 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
     for i in range(2, len(request.data)-1, 2):
         options_dict[request.data[i].upper()] = int(request.data[i+1])
     
-    
-    DATA_STORE[key] = RedisValue(
-        value=value,
-        options=options_dict
-    )
-    print(f"DATA_STORE: {DATA_STORE}")
+    with DATA_CONDITION:
+        DATA_STORE[key] = RedisValue(
+            value=value,
+            type= RedisType.STRING,
+            options=options_dict
+        )
+        print(f"DATA_STORE: {DATA_STORE}")
 
     return RedisResponse(response="OK", command=request.command)
 
@@ -52,29 +70,29 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     Handler for GET command. 
     Retrieves data from DATA_STORE
     """
-    curr_time: datetime = datetime.now()
+    #curr_time: datetime = datetime.now()
     key: str = request.data[0]
-    redis_value: str = DATA_STORE.get(key, None)
+    redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
     print(f"value: {redis_value}")
 
     if redis_value is None:
         return RedisResponse(response=None, command=request.command)
 
-    if 'PX' in redis_value.options:
-        if curr_time > redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"])):
-            return RedisResponse(response=None, command=request.command)
+    # if 'PX' in redis_value.options:
+    #     if curr_time > redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"])):
+    #         return RedisResponse(response=None, command=request.command)
 
     return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
 
 def handle_type_command(request: RedisRequest) -> RedisResponse:
     """ Handler for TYPE command. """
     key: str = request.data[0]
-    value: str = DATA_STORE.get(key, None)
+    redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
 
-    if value is None:
+    if redis_value is None:
         return RedisResponse(response="none", command=request.command)
 
-    return RedisResponse(response="string", command=request.command)
+    return RedisResponse(response=redis_value.type.value, command=request.command)
 
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
@@ -83,8 +101,14 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     values: List[str] = request.data[1:]
 
     with DATA_CONDITION:
-        if key not in DATA_STORE or not isinstance(DATA_STORE[key], deque):
-            DATA_STORE[key] = deque([])
+        redis_value = get_valid_value(key)
+
+        if redis_value is None or redis_value.type != RedisType.LIST:
+            redis_value = RedisValue(value=deque([]), type=RedisType.LIST)
+            DATA_STORE[key] = redis_value
+
+        # if key not in DATA_STORE or not isinstance(DATA_STORE[key], deque):
+        #     DATA_STORE[key] = deque([])
 
         for value in values:
             DATA_STORE[key].append(value)
@@ -100,8 +124,13 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
     key: str = request.data[0]
 
     with DATA_CONDITION:
-        if key not in DATA_STORE:
-            DATA_STORE[key] = deque([])
+        redis_value = get_valid_value(key)
+
+        if redis_value is None:
+            redis_value = RedisValue(value=deque([]), type=RedisType.LIST)
+            DATA_STORE[key] = redis_value
+        # if key not in DATA_STORE:
+        #     DATA_STORE[key] = deque([])
         
         values: List[str] = request.data[1:]
 
@@ -125,7 +154,8 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
         while True:
             # Check if any of the keys have data
             for key in keys:
-                if key in DATA_STORE and len(DATA_STORE[key]) > 0:
+                redis_value = get_valid_value(key)
+                if redis_value and len(redis_value) > 0 and redis_value.type == RedisType.LIST:
                     element: str = DATA_STORE[key].popleft()
 
                     # BLOP returns [key, value]
@@ -146,11 +176,12 @@ def handle_llen_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LLEN command. """
 
     key: str = request.data[0]
+    redis_value = get_valid_value(key)
 
-    if key not in DATA_STORE:
+    if redis_value is None:
         return RedisResponse(response=[], length='0', command=request.command)
     
-    value_length: int = len(DATA_STORE[key])
+    value_length: int = len(redis_value)
     
     return RedisResponse(response=None, length=f"{value_length}", command=request.command)
 
@@ -158,8 +189,9 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
     """ Handler for LPOP command. """
 
     key: str = request.data[0]
+    redis_value = get_valid_value(key)
 
-    if key not in DATA_STORE:
+    if redis_value is None:
         return RedisResponse(response=[], length='0', command=request.command)
 
     result: List[str] = []
@@ -178,8 +210,9 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
 
     key: str = request.data[0]
+    redis_value = get_valid_value(key)
 
-    if key not in DATA_STORE:
+    if redis_value is None:
         return RedisResponse(response=[], length='0', command=request.command)
     
     value_length: int = len(DATA_STORE[key])
@@ -205,5 +238,11 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
+def handle_xadd_command(request: RedisRequest) -> RedisResponse:
+    """ Handle for XADD command. """
 
-    
+    key: str = request.data[0]
+    redis_value = get_valid_value(key)
+
+    print(f"key: {key}")
+    print(f"redis_value: {redis_value}")

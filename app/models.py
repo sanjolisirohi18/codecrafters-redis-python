@@ -1,10 +1,20 @@
 from typing import List, Any, Dict
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 
+class RedisType(Enum):
+    STRING = "string"
+    LIST = "list"
+    SET = "set"
+    ZSET = "zset"
+    HASH = "hash"
+    STREAM = "stream"
+    VECTORSET = "vectorset"
 @dataclass
 class RedisValue:
-    value: str
+    value: Any
+    type: RedisType = RedisType.STRING
     start_time: datetime = field(default_factory=datetime.now)
     options: Dict[str, Any] = field(default_factory=dict)
 class RedisRequest:
