@@ -157,7 +157,7 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
             # Check if any of the keys have data
             for key in keys:
                 redis_value = get_valid_value(key)
-                if redis_value and len(redis_value) > 0 and redis_value.type == RedisType.LIST:
+                if redis_value and len(redis_value.value) > 0 and redis_value.type == RedisType.LIST:
                     element: str = redis_value.popleft()
                     print(f"element: {element}")
 
@@ -184,7 +184,7 @@ def handle_llen_command(request: RedisRequest) -> RedisResponse:
     if redis_value is None:
         return RedisResponse(response=[], length='0', command=request.command)
     
-    value_length: int = len(redis_value)
+    value_length: int = len(redis_value.value)
     
     return RedisResponse(response=None, length=f"{value_length}", command=request.command)
 
