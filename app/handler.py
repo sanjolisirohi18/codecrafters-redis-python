@@ -158,7 +158,7 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
             for key in keys:
                 redis_value = get_valid_value(key)
                 if redis_value and len(redis_value.value) > 0 and redis_value.type == RedisType.LIST:
-                    element: str = redis_value.popleft()
+                    element: str = redis_value.value.popleft()
                     print(f"element: {element}")
 
                     # BLOP returns [key, value]
@@ -201,9 +201,9 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
 
     if len(request.data) > 1:
         for i in range(int(request.data[1])):
-            result.append(DATA_STORE[key].popleft())
+            result.append(redis_value.value.popleft())
     else:
-        element: str = DATA_STORE[key].popleft()
+        element: str = redis_value.value.popleft()
 
         return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
 
