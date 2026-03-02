@@ -21,8 +21,12 @@ class TcpServer:
 
                     if not raw_data:
                         print(f"No data received from {addr}")
+                        break
 
                     request = RedisRequest.from_raw_data(raw_data)
+                    if not request.command:
+                        continue
+                    
                     print(f"request: {request}")
                     print(f"request command: {request.command}")
 
