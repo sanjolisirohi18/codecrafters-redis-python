@@ -111,9 +111,9 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         #     DATA_STORE[key] = deque([])
 
         for val in values:
-            DATA_STORE[key].value.append(val)
+            redis_value.value.append(val)
         
-        count: int = len(DATA_STORE[key].value)
+        count: int = len(redis_value.value)
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
     return RedisResponse(response=None, length=f"{count}", command=request.command)
@@ -135,11 +135,11 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
         values: List[str] = request.data[1:]
 
         for value in values:
-            DATA_STORE[key].value.appendleft(value)
+            redis_value.value.appendleft(value)
         
         DATA_CONDITION.notify_all()
     
-    return RedisResponse(response=None, length=f"{len(DATA_STORE[key])}", command=request.command)
+    return RedisResponse(response=None, length=f"{len(redis_value.value)}", command=request.command)
 
 def handle_blpop_command(request: RedisRequest) -> RedisResponse:
     """ Handler for BLPOP command. """
