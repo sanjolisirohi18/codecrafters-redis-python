@@ -95,7 +95,7 @@ class RedisResponse:
         if self.command in {"ping", "set", "type"}:
             return self.simple_string_response().encode()
         
-        if self.command in {"get"}:
+        if self.command in {"get", "xadd"}:
             return self.bulk_string_response().encode()
         
         if self.command in {"rpush", "lpush", "llen"}:
