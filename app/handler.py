@@ -92,7 +92,7 @@ def handle_type_command(request: RedisRequest) -> RedisResponse:
     if redis_value is None:
         return RedisResponse(response="none", command=request.command)
 
-    return RedisResponse(response=redis_value.type, command=request.command)
+    return RedisResponse(response=redis_value.type.value, command=request.command)
 
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
