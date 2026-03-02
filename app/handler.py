@@ -70,17 +70,13 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     Handler for GET command. 
     Retrieves data from DATA_STORE
     """
-    #curr_time: datetime = datetime.now()
+
     key: str = request.data[0]
-    redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
+    redis_value: str = get_valid_value(key) 
     print(f"value: {redis_value}")
 
     if redis_value is None:
         return RedisResponse(response=None, command=request.command)
-
-    # if 'PX' in redis_value.options:
-    #     if curr_time > redis_value.start_time + timedelta(milliseconds=int(redis_value.options["PX"])):
-    #         return RedisResponse(response=None, command=request.command)
 
     return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
 
@@ -107,15 +103,10 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
             redis_value = RedisValue(value=deque([]), type=RedisType.LIST)
             DATA_STORE[key] = redis_value
 
-        # if key not in DATA_STORE or not isinstance(DATA_STORE[key], deque):
-        #     DATA_STORE[key] = deque([])
-
         for val in values:
             redis_value.value.append(val)
-        
-        print(f"redis value----: {redis_value.value}")
+
         count: int = len(redis_value.value)
-        print(f"count------{len(redis_value.value)}")
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
     return RedisResponse(response=None, length=f"{count}", command=request.command)
@@ -131,8 +122,6 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
         if redis_value is None:
             redis_value = RedisValue(value=deque([]), type=RedisType.LIST)
             DATA_STORE[key] = redis_value
-        # if key not in DATA_STORE:
-        #     DATA_STORE[key] = deque([])
         
         values: List[str] = request.data[1:]
 
@@ -149,8 +138,6 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
     keys: List[str] = request.data[:-1]
     timeout: float = float(request.data[-1])
 
-    #end_time: float = datetime.now() + timedelta(seconds=timeout) if timeout > 0 else None
-
     with DATA_CONDITION:
         start_wait = datetime.now()
         while True:
@@ -159,7 +146,6 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
                 redis_value = get_valid_value(key)
                 if redis_value and len(redis_value.value) > 0 and redis_value.type == RedisType.LIST:
                     element: str = redis_value.value.popleft()
-                    print(f"element: {element}")
 
                     # BLOP returns [key, value]
                     return RedisResponse(response=[key, element], length="2", command=request.command)
