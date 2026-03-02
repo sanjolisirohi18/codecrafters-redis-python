@@ -242,12 +242,22 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     """ Handle for XADD command. """
 
     key: str = request.data[0]
-    value: List[str] = request.data[1:]
+    values: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
 
     print(f"key: {key}")
-    print(f"value: {value}")
+    print(f"value: {values}")
     print(f"redis_value: {redis_value}")
 
-    #if redis_value is None:
+    # if redis_value is None:
+    #     redis_value = RedisValue(
+    #         value=deque([(values[0], values[1], values[2])]),
+    #         type= RedisType.STREAM
+    #     )
+    #     DATA_STORE[key] = redis_value
+    
+    for idx in range(0, len(values), 3):
+        print(f"id: {values[idx]}")
+        print(f"key: {values[idx+1]}")
+        print(f"value: {values[idx+2]}")
 
