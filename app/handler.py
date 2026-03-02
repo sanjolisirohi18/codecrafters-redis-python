@@ -110,8 +110,8 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         # if key not in DATA_STORE or not isinstance(DATA_STORE[key], deque):
         #     DATA_STORE[key] = deque([])
 
-        for value in values:
-            DATA_STORE[key].value.append(value)
+        for val in values:
+            DATA_STORE[key].value.append(val)
         
         count: int = len(DATA_STORE[key].value)
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
