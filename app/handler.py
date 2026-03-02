@@ -92,7 +92,7 @@ def handle_type_command(request: RedisRequest) -> RedisResponse:
     if redis_value is None:
         return RedisResponse(response="none", command=request.command)
 
-    return RedisResponse(response=redis_value.type.value, command=request.command)
+    return RedisResponse(response=redis_value.type, command=request.command)
 
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
@@ -113,6 +113,7 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         for val in values:
             redis_value.value.append(val)
         
+        print(f"redis value----: {redis_value.value}")
         count: int = len(redis_value.value)
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
