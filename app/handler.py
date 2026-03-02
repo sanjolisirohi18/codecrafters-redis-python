@@ -113,7 +113,7 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         for value in values:
             DATA_STORE[key].value.append(value)
         
-        count: int = len(DATA_STORE[key])
+        count: int = len(DATA_STORE[key].value)
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
     return RedisResponse(response=None, length=f"{count}", command=request.command)
