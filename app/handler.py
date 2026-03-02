@@ -115,6 +115,7 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
         
         print(f"redis value----: {redis_value.value}")
         count: int = len(redis_value.value)
+        print(f"count------{len(redis_value.value)}")
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
     
     return RedisResponse(response=None, length=f"{count}", command=request.command)
