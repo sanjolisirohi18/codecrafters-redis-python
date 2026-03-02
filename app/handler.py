@@ -242,7 +242,12 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     """ Handle for XADD command. """
 
     key: str = request.data[0]
+    value: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
 
     print(f"key: {key}")
+    print(f"value: {value}")
     print(f"redis_value: {redis_value}")
+
+    #if redis_value is None:
+
