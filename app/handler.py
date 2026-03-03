@@ -229,6 +229,10 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
 
 def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisResponse:
     """Validate entry ids for XADD command. """
+    print("inside validate entry ids")
+    print(f"redis_value: {redis_value}")
+    print(f"sequence id: {sequence_id}")
+    
     if redis_value is None:
         if sequence_id == "0-0":
             return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
