@@ -1,6 +1,6 @@
 import threading
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 from collections import deque
 
@@ -260,8 +260,15 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     if sequence_id[-1] != "*":
         return sequence_id
 
-    seq_id_split: List[str] = sequence_id.split("-")
-    req_ms_time: int = int(seq_id_split[0])
+    req_ms_time: int = 0
+
+    if sequence_id == "*":
+        req_ms_time = int(datetime.now(timezone.utc).replace(tzinfo=None).timestamp() * 1000)
+        print(f"req_ms_time: {req_ms_time}")
+    else:
+        seq_id_split: List[str] = sequence_id.split("-")
+        req_ms_time: int = int(seq_id_split[0])
+
     if req_ms_time == 0:
         return f"{req_ms_time}-1"
     
