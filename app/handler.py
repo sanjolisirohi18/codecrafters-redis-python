@@ -270,6 +270,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     print(f"redis_value: {redis_value}")
 
     id_check: RedisResponse = validate_entry_ids(redis_value, values[0])
+    print(f"id_check: {id_check}")
 
     if redis_value is None:
         if id_check.error:
