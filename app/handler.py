@@ -254,6 +254,29 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
     
     return RedisResponse()
 
+def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
+    """ Handle for auto-generating sequence numbers. """
+
+    if redis_value is None:
+        return f"{sequence_id[:-1]}0"
+    
+    seq_id_split: List[str] = sequence_id.split("-")
+    req_ms_time: int = int(seq_id_split[0])
+    #req_seq_num: int = int(seq_id_split[1])
+
+    if req_ms_time == 0:
+        return f"{req_ms_time}-1"
+    
+    id: str = redis_value.value[-1][0]
+    id_split: List[str] = id.split("-")
+    ms_time: int = int(id_split[0])
+    seq_num: int = int(id_split[1])
+
+    if ms_time == req_ms_time:
+        return f"{ms_time}-{seq_num+1}"
+    
+    return sequence_id
+
 def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     """ Handle for XADD command. """
 
@@ -271,19 +294,21 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         return id_check
 
     if redis_value is None:
+        unique_id: str = generate_sequence_numbers(redis_value, values[0])
         redis_value = RedisValue(
-            value=deque([(values[0], values[1], values[2])]),
+            value=deque([(unique_id, values[1], values[2])]),
             type= RedisType.STREAM
         )
         DATA_STORE[key] = redis_value
 
-        return RedisResponse(response=values[0], length=len(values[0]), command=request.command)
+        return RedisResponse(response=unique_id, length=len(values[0]), command=request.command)
     
     for idx in range(0, len(values), 3):
         print(f"id: {values[idx]}")
         print(f"key: {values[idx+1]}")
         print(f"value: {values[idx+2]}")
+        unique_id: str = generate_sequence_numbers(redis_value, values[idx])
 
-        redis_value.value.append((values[idx], values[idx+1], values[idx+2]))
-        return RedisResponse(response=values[idx], length=len(values[idx]), command=request.command)
+        redis_value.value.append((unique_id, values[idx+1], values[idx+2]))
+        return RedisResponse(response=unique_id, length=len(values[idx]), command=request.command)
 
