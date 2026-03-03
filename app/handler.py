@@ -266,18 +266,12 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
         return f"{req_ms_time}-1"
     
     if redis_value is None:
-        print(f"{sequence_id[:-1]}0")
         return f"{sequence_id[:-1]}0"
-
-    
-    #req_seq_num: int = int(seq_id_split[1])
 
     id: str = redis_value.value[-1][0]
     id_split: List[str] = id.split("-")
     ms_time: int = int(id_split[0])
-    print(f"ms_time: {ms_time}")
     seq_num: int = int(id_split[1])
-    print(f"seq_num: {seq_num}")
 
     if ms_time == req_ms_time:
         return f"{ms_time}-{seq_num+1}"
@@ -296,7 +290,6 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     print(f"redis_value: {redis_value}")
 
     unique_id: str = generate_sequence_numbers(redis_value, values[0])
-    print(f"unique id: {unique_id}")
     id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
 
     if id_check.error:
