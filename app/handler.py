@@ -239,7 +239,7 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
         else:
             return RedisResponse()
     
-    seq_id_split: List[str] = sequence_id.split["-"]
+    seq_id_split: List[str] = sequence_id.split("-")
     print(f"seq_id_split: {seq_id_split}")
     req_ms_time: int = int(seq_id_split[0])
     req_seq_num: int = int(seq_id_split[1])
