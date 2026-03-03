@@ -280,9 +280,13 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     id_check: RedisResponse = validate_entry_ids(redis_value, values[0])
     print(f"id_check: {id_check}")
 
+    if id_check.error:
+        print(f"id_check error: {id_check.error}")
+        return id_check
+
     if redis_value is None:
-        if id_check.error:
-            return id_check
+        # if id_check.error:
+        #     return id_check
         
         redis_value = RedisValue(
             value=deque([(values[0], values[1], values[2])]),
@@ -296,10 +300,6 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         print(f"id: {values[idx]}")
         print(f"key: {values[idx+1]}")
         print(f"value: {values[idx+2]}")
-
-        if id_check.error:
-            print(f"id_check error: {id_check.error}")
-            return id_check
 
         redis_value.value.append((values[idx], values[idx+1], values[idx+2]))
         return RedisResponse(response=values[idx], length=len(values[idx]), command=request.command)
