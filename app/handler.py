@@ -256,7 +256,7 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
 
 def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     """ Handle for auto-generating sequence numbers. """
-    
+
     seq_id_split: List[str] = sequence_id.split("-")
     req_ms_time: int = int(seq_id_split[0])
     if req_ms_time == 0:
@@ -293,6 +293,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     print(f"redis_value: {redis_value}")
 
     unique_id: str = generate_sequence_numbers(redis_value, values[0])
+    print(f"unique id: {unique_id}")
     id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
 
     if id_check.error:
