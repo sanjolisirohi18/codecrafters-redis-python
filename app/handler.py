@@ -257,6 +257,9 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
 def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     """ Handle for auto-generating sequence numbers. """
 
+    if req_ms_time == 0:
+        return f"{req_ms_time}-1"
+    
     if redis_value is None:
         print(f"{sequence_id[:-1]}0")
         return f"{sequence_id[:-1]}0"
@@ -265,8 +268,7 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     req_ms_time: int = int(seq_id_split[0])
     #req_seq_num: int = int(seq_id_split[1])
 
-    if req_ms_time == 0:
-        return f"{req_ms_time}-1"
+    
     
     id: str = redis_value.value[-1][0]
     id_split: List[str] = id.split("-")
