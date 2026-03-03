@@ -233,11 +233,14 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
     print(f"redis_value: {redis_value}")
     print(f"sequence id: {sequence_id}")
 
+    if sequence_id == "0-0":
+        return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
+
     if redis_value is None:
-        if sequence_id == "0-0":
-            return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
-        else:
-            return RedisResponse()
+        # if sequence_id == "0-0":
+        #     return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
+        # else:
+        return RedisResponse()
     
     seq_id_split: List[str] = sequence_id.split("-")
     print(f"seq_id_split: {seq_id_split}")
