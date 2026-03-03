@@ -46,13 +46,17 @@ class RedisRequest:
 
 class RedisResponse:
     """Build and format the response sent back to the client. """
-    def __init__(self, response = None, length = None, command = None):
+    def __init__(self, response = None, length = None, command = None, error = None):
         self.response: Any = response
         self.length: str = length
         self.command: str = command
+        self.error: str = error
     
     def simple_string_response(self) -> str:
         """ Generate simple string response. """
+        if self.error:
+            return f"-{self.response}\r\n"
+        
         return f"+{self.response}\r\n"
     
     def bulk_string_response(self) -> str:
@@ -96,6 +100,9 @@ class RedisResponse:
             return self.simple_string_response().encode()
         
         if self.command in {"get", "xadd"}:
+            if self.error:
+                return self.simple_string_response().encode()
+            
             return self.bulk_string_response().encode()
         
         if self.command in {"rpush", "lpush", "llen"}:

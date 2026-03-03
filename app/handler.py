@@ -227,6 +227,31 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
 
     return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
+def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisResponse:
+    """Validate entry ids for XADD command. """
+    if redis_value is None:
+        if sequence_id == "0-0":
+            return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
+    
+    seq_id_split: List[str] = sequence_id.split["-"]
+    req_ms_time: int = int(seq_id_split[0])
+    req_seq_num: int = int(seq_id_split[1])
+    
+    id: str = redis_value.value[-1][0]
+    print(f"id from deque: {id}")
+    id_split: List[str] = id.split("-")
+    ms_time: int = int(id_split[0])
+    seq_num: int = int(id_split[1])
+
+    if ms_time > req_ms_time:
+        return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
+    
+    if ms_time == req_ms_time:
+        if seq_num > req_seq_num:
+            return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
+    
+    return RedisResponse()
+
 def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     """ Handle for XADD command. """
 
@@ -238,7 +263,12 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     print(f"value: {values}")
     print(f"redis_value: {redis_value}")
 
+    id_check: RedisResponse = validate_entry_ids(redis_value, values[0])
+
     if redis_value is None:
+        if id_check.error:
+            return id_check
+        
         redis_value = RedisValue(
             value=deque([(values[0], values[1], values[2])]),
             type= RedisType.STREAM
@@ -252,5 +282,8 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         print(f"key: {values[idx+1]}")
         print(f"value: {values[idx+2]}")
 
-        DATA_STORE[key].append((values[idx], {values[idx+1]}, {values[idx+2]}))
+        if id_check.error:
+            return id_check
+
+        redis_value.value.append((values[idx], {values[idx+1]}, {values[idx+2]}))
 
