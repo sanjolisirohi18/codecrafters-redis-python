@@ -289,27 +289,31 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     print(f"value: {values}")
     print(f"redis_value: {redis_value}")
 
-    id_check: RedisResponse = validate_entry_ids(redis_value, values[0])
+    unique_id: str = generate_sequence_numbers(redis_value, values[0])
+    id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
 
     if id_check.error:
         return id_check
 
     if redis_value is None:
-        unique_id: str = generate_sequence_numbers(redis_value, values[0])
+        
         redis_value = RedisValue(
             value=deque([(unique_id, values[1], values[2])]),
             type= RedisType.STREAM
         )
         DATA_STORE[key] = redis_value
 
-        return RedisResponse(response=unique_id, length=len(values[0]), command=request.command)
+        return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
     
-    for idx in range(0, len(values), 3):
-        print(f"id: {values[idx]}")
-        print(f"key: {values[idx+1]}")
-        print(f"value: {values[idx+2]}")
-        unique_id: str = generate_sequence_numbers(redis_value, values[idx])
+    redis_value.value.append((unique_id, values[1], values[2]))
+    return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
+    
+    # for idx in range(0, len(values), 3):
+    #     print(f"id: {values[idx]}")
+    #     print(f"key: {values[idx+1]}")
+    #     print(f"value: {values[idx+2]}")
+    #     unique_id: str = generate_sequence_numbers(redis_value, values[idx])
 
-        redis_value.value.append((unique_id, values[idx+1], values[idx+2]))
-        return RedisResponse(response=unique_id, length=len(values[idx]), command=request.command)
+    #     redis_value.value.append((unique_id, values[idx+1], values[idx+2]))
+    #     return RedisResponse(response=unique_id, length=len(values[idx]), command=request.command)
 
