@@ -258,6 +258,7 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     """ Handle for auto-generating sequence numbers. """
 
     if redis_value is None:
+        print(f"{sequence_id[:-1]}0")
         return f"{sequence_id[:-1]}0"
     
     seq_id_split: List[str] = sequence_id.split("-")
