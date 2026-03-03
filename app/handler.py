@@ -263,7 +263,7 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
         return f"{req_ms_time}-1"
     
     if redis_value is None:
-        if sequence_id[-1] == "*"
+        if sequence_id[-1] == "*":
             print(f"{sequence_id[:-1]}0")
             return f"{sequence_id[:-1]}0"
         
