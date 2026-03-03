@@ -274,7 +274,6 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     
     if redis_value is None:
         return f"{req_ms_time}-0"
-        #return f"{sequence_id[:-1]}0"
 
     id: str = redis_value.value[-1][0]
     id_split: List[str] = id.split("-")
