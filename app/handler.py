@@ -254,7 +254,7 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
         return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
     
     if ms_time == req_ms_time:
-        if seq_num > req_seq_num:
+        if seq_num >= req_seq_num:
             return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
     
     return RedisResponse()
