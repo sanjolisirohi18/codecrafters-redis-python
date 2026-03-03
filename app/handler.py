@@ -298,6 +298,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         print(f"value: {values[idx+2]}")
 
         if id_check.error:
+            print(f"id_check error: {id_check.error}")
             return id_check
 
         redis_value.value.append((values[idx], values[idx+1], values[idx+2]))
