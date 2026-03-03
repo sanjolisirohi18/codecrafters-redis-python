@@ -55,7 +55,7 @@ class RedisResponse:
     def simple_string_response(self) -> str:
         """ Generate simple string response. """
         if self.error:
-            return f"-{self.response}\r\n"
+            return f"-{self.error}\r\n"
         
         return f"+{self.response}\r\n"
     
