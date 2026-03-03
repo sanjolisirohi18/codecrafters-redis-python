@@ -278,7 +278,7 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     if ms_time == req_ms_time:
         return f"{ms_time}-{seq_num+1}"
     
-    return sequence_id
+    return f"{req_ms_time}-0"
 
 def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     """ Handle for XADD command. """
