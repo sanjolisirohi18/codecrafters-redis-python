@@ -42,12 +42,12 @@ class RedisRequest:
         if not buffer.startswith(b"*"):
             return None, 0
         
-        lines: List[bytes] = buffer.split(b"\r\n")
+        lines = buffer.split(b"\r\n")
         if len(lines) < 2:
             return None, 0
         
         try:
-            num_elements: int = int(lines[0][1:])
+            num_elements = int(lines[0][1:])
         except (ValueError, IndexError):
             return None, 0
         
@@ -55,28 +55,28 @@ class RedisRequest:
         # So for N elements, we need 2 lines per element + the header line.
         # Header: *N\r\n (1 line)
         # Elements: $L\r\nDATA\r\n (2 lines per element)
-        expected_lines: int = 1 + (num_elements * 2)
+        expected_lines = 1 + (num_elements * 2)
 
         if len(lines) <= expected_lines:
             return None, 0
         
         # Extract Values
-        actual_values: List[str] = []
-        bytes_consumed: int = len(lines[0]) + 2 # Start with header length + \r\n
+        actual_values= []
+        bytes_consumed = len(lines[0]) + 2 # Start with header length + \r\n
         print(f"num_elements: {num_elements}")
         print(f"type of num_elements: {type(num_elements)}")
 
         for i in range(num_elements):
             # Indexing: line 1 is $len, line 2 is data, line3 is $len...
-            val: str = lines[2 + (i*2)].decode('utf-8')
+            val = lines[2 + (i*2)].decode('utf-8')
             actual_values.append(val)
 
             # Keep track of exactly how many bytes we've "read"
             bytes_consumed += len(lines[1 + (i * 2)]) + 2 # the $<len>\r\n part
             bytes_consumed += len(lines[2 + (i * 2)]) + 2 # the DATA\r\n part
         
-        command: str = actual_values[0].lower()
-        data: List[str] = actual_values[1:]
+        command = actual_values[0].lower()
+        data = actual_values[1:]
 
         return cls(command=command, data=data), bytes_consumed
     
