@@ -14,7 +14,8 @@ from .handler import (
     handle_lpop_command,
     handle_blpop_command,
     handle_type_command,
-    handle_xadd_command
+    handle_xadd_command,
+    handle_xrange_command
 )
 
 ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
@@ -29,7 +30,8 @@ ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
     "lpop": handle_lpop_command,
     "blpop": handle_blpop_command,
     "type": handle_type_command,
-    "xadd": handle_xadd_command
+    "xadd": handle_xadd_command,
+    "xrange": handle_xrange_command,
 }
 
 class Router:
