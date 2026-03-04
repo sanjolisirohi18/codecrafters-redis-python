@@ -380,8 +380,9 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
 
         if redis_id_ts >= start_ts and redis_id_ts <= end_ts:
             if redis_id_seq_num >= start_seq_num and redis_id_seq_num <= end_seq_num:
-                output: List[Any] = [RESPEncoder.bulk_string(value=redis_id), [RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value)]]
-                result.append(output)
+                #output: List[Any] = [RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value)]
+                #result.append(output)
+                result.append(RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value))
     
     encoded_bytes: bytes = RESPEncoder.array(values=result)
 
