@@ -89,7 +89,7 @@ def handle_type_command(request: RedisRequest) -> RedisResponse:
     if redis_value is None:
         encoded_bytes = RESPEncoder.simple_string(value="none")
     else:
-        encoded_bytes = RESPEncoder.simple_string(value=redis_value)
+        encoded_bytes = RESPEncoder.simple_string(value=redis_value.type.value)
 
     return RedisResponse(payload=encoded_bytes)
 
