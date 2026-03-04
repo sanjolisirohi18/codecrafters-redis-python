@@ -76,7 +76,7 @@ def handle_get_command(request: RedisRequest) -> RedisResponse:
     redis_value: str = get_valid_value(key) 
     print(f"value: {redis_value}")
 
-    encoded_bytes: bytes = RESPEncoder.bulk_string(value=redis_value)
+    encoded_bytes: bytes = RESPEncoder.bulk_string(value=redis_value.value)
 
     return RedisResponse(payload=encoded_bytes)
 
