@@ -205,7 +205,7 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(payload=RESPEncoder.array(None))
+        return RedisResponse(payload=RESPEncoder.array([]))
     
     value_length: int = len(redis_value.value)
     start_index: int = int(request.data[1]) if int(request.data[1]) >= 0 else value_length + int(request.data[1])
@@ -215,10 +215,10 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
         start_index = 0
 
     if start_index > end_index:
-        return RedisResponse(payload=RESPEncoder.array(None))
+        return RedisResponse(payload=RESPEncoder.array([]))
 
     if start_index >= value_length:
-        return RedisResponse(payload=RESPEncoder.array(None))
+        return RedisResponse(payload=RESPEncoder.array([]))
     
     if end_index >= value_length:
         end_index = value_length - 1
