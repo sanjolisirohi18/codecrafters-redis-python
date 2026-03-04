@@ -15,7 +15,8 @@ from .handler import (
     handle_blpop_command,
     handle_type_command,
     handle_xadd_command,
-    handle_xrange_command
+    handle_xrange_command,
+    handle_xread_command
 )
 
 ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
@@ -32,6 +33,7 @@ ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
     "type": handle_type_command,
     "xadd": handle_xadd_command,
     "xrange": handle_xrange_command,
+    "xread": handle_xread_command,
 }
 
 class Router:
