@@ -378,7 +378,7 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
         return RedisResponse(payload=RESPEncoder.array(None))
 
     start_id: str = validate_xrange_id(id=values[0], type="start") if values[0] != "-" else redis_value.value[0][0]
-    end_id: str = validate_xrange_id(id=values[1], type="end")
+    end_id: str = validate_xrange_id(id=values[1], type="end") if values[1] != "+" else f"{redis_value.value[0][0].split("-")[0]}-18446744073709551615"
 
     matching_entries: List[Any] = []
 
