@@ -160,7 +160,7 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
                 remaining = timeout - elapsed
 
                 if remaining <= 0:
-                    return RedisResponse(payload=RESPEncoder.array())
+                    return RedisResponse(payload=RESPEncoder.array(None))
                 
                 DATA_CONDITION.wait(timeout=remaining)
             else:
@@ -184,7 +184,7 @@ def handle_lpop_command(request: RedisRequest) -> RedisResponse:
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(payload=RESPEncoder.array())
+        return RedisResponse(payload=RESPEncoder.array(None))
 
     result: List[str] = []
 
@@ -205,7 +205,7 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(payload=RESPEncoder.array())
+        return RedisResponse(payload=RESPEncoder.array(None))
     
     value_length: int = len(redis_value.value)
     start_index: int = int(request.data[1]) if int(request.data[1]) >= 0 else value_length + int(request.data[1])
@@ -215,10 +215,10 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
         start_index = 0
 
     if start_index > end_index:
-        return RedisResponse(payload=RESPEncoder.array())
+        return RedisResponse(payload=RESPEncoder.array(None))
 
     if start_index >= value_length:
-        return RedisResponse(payload=RESPEncoder.array())
+        return RedisResponse(payload=RESPEncoder.array(None))
     
     if end_index >= value_length:
         end_index = value_length - 1
@@ -389,7 +389,7 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     print(f"redis_value: {redis_value}")
 
     if redis_value is None or redis_value.type != RedisType.STREAM:
-        return RedisResponse(payload=RESPEncoder.array())
+        return RedisResponse(payload=RESPEncoder.array(None))
 
     start_id: str = validate_xrange_id(id=request.data[1:][0], type="start")
     end_id: str = validate_xrange_id(id=request.data[1:][1], type="end")
