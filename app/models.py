@@ -39,10 +39,11 @@ class RedisRequest:
         """
 
         # Basic RESP Array check: *<count>\r\n
-        if not buffer.startswith(b"*"):
-            return None, 0
+        # 1. Check for the start of an array
+        if not buffer.startswith(b'*'):
+            return None, len(buffer)
         
-        lines = buffer.split(b"\r\n")
+        lines = buffer.split(b'\r\n')
         if len(lines) < 2:
             return None, 0
         

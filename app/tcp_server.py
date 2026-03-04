@@ -48,7 +48,8 @@ class TcpServer:
                         response = Router.route(request)
 
                         if response:
-                            conn.sendall(response.to_bytes())
+                            payload = response.to_bytes()
+                            conn.sendall(payload)
                     except Exception as e:
                         print(f"Handler Error: {e}")
                         # Send an error back to client so they aren't hanging
