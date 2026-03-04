@@ -320,7 +320,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     redis_value.value.append((unique_id, values[1], values[2]))
     return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
 
-def validate_xrange_id(id: str, type: str) -> str:
+def validate_xrange_id(id: str, type: str = "start") -> str:
     """ Handler to validate start and end IDs for xrange command. """
 
     for char in id:
@@ -329,7 +329,7 @@ def validate_xrange_id(id: str, type: str) -> str:
     
     return f"{id}-0" if type == "start" else f"{id}-18446744073709551615"
 
-def is_id_in_range(redis_id: str, start_id: str, end_id: str) -> bool:
+def is_id_in_xrange(redis_id: str, start_id: str, end_id: str) -> bool:
     """ Check if a redis id falls within the given range (inclusive). """
     redis_id_ts, redis_id_seq_num = id_split(redis_id)
     start_ts, start_seq_num = id_split(start_id)
@@ -382,7 +382,7 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     for entry in redis_value.value:
         redis_id: str = entry[0]
 
-        if is_id_in_range(redis_id, start_id, end_id):
+        if is_id_in_xrange(redis_id, start_id, end_id):
             matching_entries.append(encode_stream_entry(entry))
     
     # Build outer array header manually (entries are pre-encoded bytes)
@@ -390,6 +390,19 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     encoded_bytes: bytes = header + b"".join(matching_entries)
 
     return RedisResponse(payload=encoded_bytes)
+
+def is_id_in_xread(redis_id: str, start_id: str) -> bool:
+    """ Check if a redis id is greater than start_id. """
+    redis_id_ts, redis_id_seq_num = id_split(redis_id)
+    start_ts, start_seq_num = id_split(start_id)
+    
+    if start_ts > redis_id_ts:
+        return False
+    
+    if start_ts == redis_id_ts and start_seq_num > redis_id_seq_num:
+        return False
+    
+    return True
 
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
@@ -404,5 +417,20 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
 
     if redis_value is None or redis_value.type != RedisType.STREAM:
         return RedisResponse(payload=RESPEncoder.array(None))
+    
+    #start_ts, start_seq_num = id_split(start_id)
+    matching_entries: List[Any] = []
+    start_id: str = validate_xrange_id(id=values[0], type="start")
+
+    for entry in redis_value.value:
+        redis_id: str = entry[0]
+
+        if is_id_in_xread(redis_id, start_id):
+            matching_entries.append(encode_stream_entry(entry))
+    
+    header: bytes = f"*{len(matching_entries)}\r\n".encode()
+    encoded_bytes: bytes = header + b"".join(matching_entries)
+
+    return RedisResponse(payload=encoded_bytes)
 
 
