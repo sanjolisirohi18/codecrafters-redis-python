@@ -343,6 +343,41 @@ def validate_xrange_id(id: str, type: str) -> str:
     
     return f"{id}-0" if type == "start" else f"{id}-18446744073709551615"
 
+def is_id_in_range(redis_id: str, start_id: str, end_id: str) -> bool:
+    """ Check if a redis id falls within the given range (inclusive). """
+    redis_id_ts, redis_id_seq_num = id_split(redis_id)
+    start_ts, start_seq_num = id_split(start_id)
+    end_ts, end_seq_num = id_split(end_id)
+
+    # check if before start
+    if start_ts > redis_id_ts:
+        return False
+    
+    if start_ts == redis_id_ts and start_seq_num > redis_id_seq_num:
+        return False
+    
+    # Check if after end
+    if redis_id_ts > end_ts:
+        return False
+    
+    if redis_id_ts == end_ts and redis_id_seq_num > end_seq_num:
+        return False
+    
+    return True
+
+def encode_stream_entry(entry: Tuple) -> bytes:
+    """
+    Encode a single steam as RESP. 
+    """
+    entry_id: str = entry[0]
+    fields: List[str] = entry[1:]
+
+    fields_array: List[bytes] = RESPEncoder.array(fields)
+    id_encoded: bytes = RESPEncoder.bulk_string(entry_id)
+    
+    # Manual *2 header since we're combining bulk_string + array
+    return b"*2\r\n" + id_encoded + fields_array
+
 def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XRANGE command. """
 
@@ -353,41 +388,46 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     print(f"values: {values}")
     print(f"redis_value: {redis_value}")
 
+    if redis_value is None or redis_value.type != RedisType.STREAM:
+        return RedisResponse(payload=RESPEncoder.array())
+
     start_id: str = validate_xrange_id(id=request.data[1:][0], type="start")
     end_id: str = validate_xrange_id(id=request.data[1:][1], type="end")
 
     print(f"start_id: {start_id}")
     print(f"end_id: {end_id}")
+    # start_ts, start_seq_num = id_split(redis_id=start_id)
 
-    # start_id_split: List[str] = start_id.split("-")
-    # end_id_split: List[str] = end_id.split("-")
+    # end_ts, end_seq_num = id_split(redis_id=end_id)
+    matching_entries: List[Any] = []
 
-    # start_ts: int = int(start_id_split[0])
-    # start_seq_num: int = int(start_id_split[1])
-    start_ts, start_seq_num = id_split(redis_id=start_id)
+    for entry in redis_value.value:
+        redis_id: str = entry[0]
 
-    # end_ts: int = int(end_id_split[0])
-    # end_seq_num: int = int(end_id_split[1])
-    end_ts, end_seq_num = id_split(redis_id=end_id)
-    result: List[Any] = []
-
-    for value in redis_value.value:
-        redis_id: str = value[0]
-        redis_key: str = value[1]
-        redis_key_value: str = value[2]
-
-        redis_id_ts, redis_id_seq_num = id_split(redis_id)
-
-        if redis_id_ts >= start_ts and redis_id_ts <= end_ts:
-            if redis_id_seq_num >= start_seq_num and redis_id_seq_num <= end_seq_num:
-                #output: List[Any] = [RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value)]
-                #result.append(output)
-                result.append(RESPEncoder.bulk_string(value=redis_id))
-                result.append(RESPEncoder.bulk_string(value=redis_key))
-                result.append(RESPEncoder.bulk_string(value=redis_key_value))
-                #result.append(RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value))
+        if is_id_in_range(redis_id, start_id, end_id):
+            matching_entries.append(encode_stream_entry(entry))
     
-    encoded_bytes: bytes = RESPEncoder.array(values=result)
+    # Build outer array header manually (entries are pre-encoded bytes)
+    header: bytes = f"*{len(matching_entries)}\r\n".encode()
+    encoded_bytes: bytes = header + b"".join(matching_entries)
+
+    # for value in redis_value.value:
+    #     redis_id: str = value[0]
+    #     redis_key: str = value[1]
+    #     redis_key_value: str = value[2]
+
+    #     redis_id_ts, redis_id_seq_num = id_split(redis_id)
+
+    #     if redis_id_ts >= start_ts and redis_id_ts <= end_ts:
+    #         if redis_id_seq_num >= start_seq_num and redis_id_seq_num <= end_seq_num:
+    #             #output: List[Any] = [RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value)]
+    #             #result.append(output)
+    #             result.append(RESPEncoder.bulk_string(value=redis_id))
+    #             result.append(RESPEncoder.bulk_string(value=redis_key))
+    #             result.append(RESPEncoder.bulk_string(value=redis_key_value))
+    #             #result.append(RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value))
+    
+    # encoded_bytes: bytes = RESPEncoder.array(values=result)
 
     return RedisResponse(payload=encoded_bytes)
 
