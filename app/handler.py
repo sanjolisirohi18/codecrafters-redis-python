@@ -394,8 +394,8 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
     
-    key: str = request.data[0]
-    values: List[str] = request.data[1:]
+    key: str = request.data[1]
+    values: List[str] = request.data[2:]
     redis_value = get_valid_value(key)
 
     print(f"key: {key}")
