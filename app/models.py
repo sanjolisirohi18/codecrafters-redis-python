@@ -43,43 +43,76 @@ class RedisRequest:
         if not buffer.startswith(b'*'):
             return None, len(buffer)
         
-        lines = buffer.split(b'\r\n')
-        if len(lines) < 2:
+        # 2. Find the first CRLF to get the array length
+        first_crlf = buffer.find(b'\r\n')
+        if first_crlf == -1:
             return None, 0
         
+        # lines = buffer.split(b'\r\n')
+        # if len(lines) < 2:
+        #     return None, 0
+        
         try:
-            num_elements = int(lines[0][1:])
+            num_elements = int(buffer[1:first_crlf])
         except (ValueError, IndexError):
-            return None, 0
+            return None, len(buffer)
         
         # Each element in a Redis command array is a Bulk String: $<len>\r\n<data>\r\n
         # So for N elements, we need 2 lines per element + the header line.
         # Header: *N\r\n (1 line)
         # Elements: $L\r\nDATA\r\n (2 lines per element)
-        expected_lines = 1 + (num_elements * 2)
+        # expected_lines = 1 + (num_elements * 2)
 
-        if len(lines) <= expected_lines:
-            return None, 0
+        # if len(lines) <= expected_lines:
+        #     return None, 0
         
         # Extract Values
+        cursor =first_crlf + 2
         actual_values= []
-        bytes_consumed = len(lines[0]) + 2 # Start with header length + \r\n
+        #bytes_consumed = len(lines[0]) + 2 # Start with header length + \r\n
         print(f"num_elements: {num_elements}")
         print(f"type of num_elements: {type(num_elements)}")
 
-        for i in range(num_elements):
-            # Indexing: line 1 is $len, line 2 is data, line3 is $len...
-            val = lines[2 + (i*2)].decode('utf-8')
-            actual_values.append(val)
+        # 3. Parse each Bulk String element
+        for _ in range(num_elements):
+            # Find the '$' line
+            next_crlf = buffer.find(b'\r\n', cursor)
+            if next_crlf == -1: return None, 0
 
-            # Keep track of exactly how many bytes we've "read"
-            bytes_consumed += len(lines[1 + (i * 2)]) + 2 # the $<len>\r\n part
-            bytes_consumed += len(lines[2 + (i * 2)]) + 2 # the DATA\r\n part
+            try:
+                # Get length of the bulk string: e.g., b'$5' -> 5
+                bulk_len = int(buffer[cursor+1:next_crlf])
+            except ValueError:
+                return None, len(buffer)
+
+            cursor = next_crlf + 2
+            
+            # Check if we have the full data + the trailing \r\n
+            if len(buffer) < cursor + bulk_len + 2:
+                return None, 0
+            
+            # Extract the data and decode to string for the handler
+            data_content = buffer[cursor : cursor + bulk_len].decode('utf-8')
+            actual_values.append(data_content)
+            
+            # Move cursor past data and the \r\n
+            cursor += bulk_len + 2
+
+            # # Indexing: line 1 is $len, line 2 is data, line3 is $len...
+            # val = lines[2 + (i*2)].decode('utf-8')
+            # actual_values.append(val)
+
+            # # Keep track of exactly how many bytes we've "read"
+            # bytes_consumed += len(lines[1 + (i * 2)]) + 2 # the $<len>\r\n part
+            # bytes_consumed += len(lines[2 + (i * 2)]) + 2 # the DATA\r\n part
+        
+        if not actual_values:
+            return None, cursor
         
         command = actual_values[0].lower()
-        data = actual_values[1:]
+        command_data = actual_values[1:]
 
-        return cls(command=command, data=data), bytes_consumed
+        return cls(command=command, data=command_data), cursor
     
     # @classmethod
     # def from_raw_data(cls, raw_data:str) -> 'RedisRequest':
