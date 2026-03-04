@@ -30,6 +30,7 @@ class RESPEncoder():
     @staticmethod
     def array(values: List[str] | None) -> str:
         """ Generate array response. """
+        print(f"array_values: {values}")
 
         if values is None:
             return f"*-1\r\n".encode()
