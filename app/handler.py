@@ -1,7 +1,7 @@
 import threading
 
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple, Any
 from collections import deque
 
 from .models import RedisRequest, RedisResponse, RedisValue, RedisType
@@ -230,6 +230,20 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
 
     return RedisResponse(payload=RESPEncoder.array(values=result))
 
+def id_split(redis_id: str) -> Tuple[int, int]:
+    """ 
+    Handler to Redis ID split by '-'
+
+    Args:
+        redis_id: e.g., 0-1
+
+    Returns:
+        Tuple[int,int]: Tuple[timestamp, sequence number]
+    """
+    values:List[str] = redis_id.split("-")
+
+    return int(values[0]), int(values[1])
+
 def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> Optional[RedisResponse]:
     """Validate entry ids for XADD command. """
 
@@ -239,14 +253,16 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> Optional[Re
     if redis_value is None:
         return None
     
-    seq_id_split: List[str] = sequence_id.split("-")
-    req_ms_time: int = int(seq_id_split[0])
-    req_seq_num: int = int(seq_id_split[1])
+    # seq_id_split: List[str] = sequence_id.split("-")
+    # req_ms_time: int = int(seq_id_split[0])
+    # req_seq_num: int = int(seq_id_split[1])
+    req_ms_time, req_seq_num = id_split(sequence_id)
     
-    id: str = redis_value.value[-1][0]
-    id_split: List[str] = id.split("-")
-    ms_time: int = int(id_split[0])
-    seq_num: int = int(id_split[1])
+    # id: str = redis_value.value[-1][0]
+    # id_split: List[str] = id.split("-")
+    # ms_time: int = int(id_split[0])
+    # seq_num: int = int(id_split[1])
+    ms_time, seq_num = id_split(redis_value.value[-1][0])
 
     if ms_time > req_ms_time:
         return RedisResponse(payload=RESPEncoder.error(message="ERR The ID specified in XADD is equal or smaller than the target stream top item"))
@@ -277,10 +293,11 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     if redis_value is None:
         return f"{req_ms_time}-0"
 
-    id: str = redis_value.value[-1][0]
-    id_split: List[str] = id.split("-")
-    ms_time: int = int(id_split[0])
-    seq_num: int = int(id_split[1])
+    # id: str = redis_value.value[-1][0]
+    # id_split: List[str] = id.split("-")
+    # ms_time: int = int(id_split[0])
+    # seq_num: int = int(id_split[1])
+    ms_time, seq_num = id_split(redis_value.value[-1][0])
 
     if ms_time == req_ms_time:
         return f"{ms_time}-{seq_num+1}"
@@ -336,7 +353,38 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     print(f"values: {values}")
     print(f"redis_value: {redis_value}")
 
-    
+    start_id: str = validate_xrange_id(id=request.data[1:][0], type="start")
+    end_id: str = validate_xrange_id(id=request.data[1:][1], type="end")
 
+    print(f"start_id: {start_id}")
+    print(f"end_id: {end_id}")
+
+    # start_id_split: List[str] = start_id.split("-")
+    # end_id_split: List[str] = end_id.split("-")
+
+    # start_ts: int = int(start_id_split[0])
+    # start_seq_num: int = int(start_id_split[1])
+    start_ts, start_seq_num = id_split(redis_id=start_id)
+
+    # end_ts: int = int(end_id_split[0])
+    # end_seq_num: int = int(end_id_split[1])
+    end_ts, end_seq_num = id_split(redis_id=end_id)
+    result: List[Any] = []
+
+    for value in redis_value.value:
+        redis_id: str = value[0]
+        redis_key: str = value[1]
+        redis_key_value: str = value[2]
+
+        redis_id_ts, redis_id_seq_num = id_split(redis_id)
+
+        if redis_id_ts >= start_ts and redis_id_ts <= end_ts:
+            if redis_id_seq_num >= start_seq_num and redis_id_seq_num <= end_seq_num:
+                output: List[Any] = [redis_id, [redis_key, redis_key_value]]
+                result.append(output)
+    
+    encoded_bytes: bytes = RESPEncoder.array(values=result)
+
+    return RedisResponse(payload=encoded_bytes)
 
 
