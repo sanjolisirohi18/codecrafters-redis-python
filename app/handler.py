@@ -377,8 +377,8 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     if redis_value is None or redis_value.type != RedisType.STREAM:
         return RedisResponse(payload=RESPEncoder.array(None))
 
-    start_id: str = validate_xrange_id(id=request.data[1:][0], type="start")
-    end_id: str = validate_xrange_id(id=request.data[1:][1], type="end")
+    start_id: str = validate_xrange_id(id=values[0], type="start") if values[0] != "-" else redis_value.value[0][0]
+    end_id: str = validate_xrange_id(id=values[1], type="end")
 
     matching_entries: List[Any] = []
 
