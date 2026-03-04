@@ -1,10 +1,11 @@
 import threading
 
 from datetime import datetime, timedelta, timezone
-from typing import List
+from typing import List, Optional
 from collections import deque
 
 from .models import RedisRequest, RedisResponse, RedisValue, RedisType
+from .protocols import RESPEncoder
 
 DATA_STORE = {}
 DATA_CONDITION = threading.Condition()
@@ -30,16 +31,18 @@ def get_valid_value(key: str):
 
 def handle_ping_command(request: RedisRequest) -> RedisResponse:
     """ Handler for PING command. """
-    return RedisResponse(response="PONG", command=request.command)
+    encoded_bytes: bytes = RESPEncoder.simple_string(value="PONG")
+    return RedisResponse(payload=encoded_bytes)
 
 def handle_echo_command(request: RedisRequest) -> RedisResponse:
     """ Hanlder for ECHO command. """
-    print(f"Redis command: {request.command}")
-    print(f"Redis data: {request.data}")
+    # print(f"Redis command: {request.command}")
+    # print(f"Redis data: {request.data}")
 
-    response: str = request.data[0]
+    #response: str = request.data[0]
+    encoded_bytes: bytes = RESPEncoder.bulk_string(value=request.data[0])
 
-    return RedisResponse(response=response, length=f"{len(response)}", command=request.command)
+    return RedisResponse(payload=encoded_bytes)
 
 def handle_set_command(request: RedisRequest) -> RedisResponse:
     """ 
@@ -63,9 +66,10 @@ def handle_set_command(request: RedisRequest) -> RedisResponse:
         )
         print(f"DATA_STORE: {DATA_STORE}")
 
-    return RedisResponse(response="OK", command=request.command)
+    encoded_bytes: bytes = RESPEncoder.simple_string(value="OK")
+    return RedisResponse(payload=encoded_bytes)
 
-def handle_get_command(request: RedisRequest) -> RedisRequest:
+def handle_get_command(request: RedisRequest) -> RedisResponse:
     """ 
     Handler for GET command. 
     Retrieves data from DATA_STORE
@@ -75,20 +79,28 @@ def handle_get_command(request: RedisRequest) -> RedisRequest:
     redis_value: str = get_valid_value(key) 
     print(f"value: {redis_value}")
 
-    if redis_value is None:
-        return RedisResponse(response=None, command=request.command)
+    encoded_bytes: bytes = RESPEncoder.bulk_string(value=redis_value)
 
-    return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
+    return RedisResponse(payload=encoded_bytes)
+
+    # if redis_value is None:
+    #     return RedisResponse(response=None, command=request.command)
+
+    # return RedisResponse(response=redis_value.value, length=f"{len(redis_value.value)}", command=request.command)
 
 def handle_type_command(request: RedisRequest) -> RedisResponse:
     """ Handler for TYPE command. """
     key: str = request.data[0]
     redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
+    encoded_bytes: bytes = b""
 
     if redis_value is None:
-        return RedisResponse(response="none", command=request.command)
+        encoded_bytes = RESPEncoder.simple_string(value="none")
+        #return RedisResponse(response="none", command=request.command)
+    else:
+        encoded_bytes = RESPEncoder.simple_string(value=redis_value)
 
-    return RedisResponse(response=redis_value.type.value, command=request.command)
+    return RedisResponse(payload=encoded_bytes)
 
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
@@ -108,8 +120,9 @@ def handle_rpush_command(request: RedisRequest) -> RedisResponse:
 
         count: int = len(redis_value.value)
         DATA_CONDITION.notify_all() # Wake up any thread waiting in BLPOP
+        encoded_bytes: bytes = RESPEncoder.integer(value=count)
     
-    return RedisResponse(response=None, length=f"{count}", command=request.command)
+    return RedisResponse(payload=encoded_bytes)
 
 def handle_lpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LPUSH command. """
@@ -129,8 +142,9 @@ def handle_lpush_command(request: RedisRequest) -> RedisResponse:
             redis_value.value.appendleft(value)
         
         DATA_CONDITION.notify_all()
+        encoded_bytes: bytes = RESPEncoder.integer(value=len(redis_value.value))
     
-    return RedisResponse(response=None, length=f"{len(redis_value.value)}", command=request.command)
+    return RedisResponse(payload=encoded_bytes)
 
 def handle_blpop_command(request: RedisRequest) -> RedisResponse:
     """ Handler for BLPOP command. """
@@ -148,14 +162,16 @@ def handle_blpop_command(request: RedisRequest) -> RedisResponse:
                     element: str = redis_value.value.popleft()
 
                     # BLOP returns [key, value]
-                    return RedisResponse(response=[key, element], length="2", command=request.command)
+                    return RedisResponse(payload=RESPEncoder.array(values=[key, element]))
+                    #return RedisResponse(response=[key, element], length="2", command=request.command)
             
             if timeout > 0:
                 elapsed = (datetime.now() - start_wait).total_seconds()
                 remaining = timeout - elapsed
 
                 if remaining <= 0:
-                    return RedisResponse(response=None, command=request.command)
+                    return RedisResponse(payload=RESPEncoder.array())
+                    #return RedisResponse(response=None, command=request.command)
                 
                 DATA_CONDITION.wait(timeout=remaining)
             else:
@@ -168,20 +184,22 @@ def handle_llen_command(request: RedisRequest) -> RedisResponse:
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(response=[], length='0', command=request.command)
+        return RedisResponse(payload=RESPEncoder.integer(value=0))
     
-    value_length: int = len(redis_value.value)
+    #value_length: int = len(redis_value.value)
+    # encoded_bytes: bytes = RESPEncoder.integer(value=len(redis_value.value))
     
-    return RedisResponse(response=None, length=f"{value_length}", command=request.command)
+    return RedisResponse(payload=RESPEncoder.integer(value=len(redis_value.value)))
 
-def handle_lpop_command(request: RedisRequest) -> RedisRequest:
+def handle_lpop_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LPOP command. """
 
     key: str = request.data[0]
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(response=[], length='0', command=request.command)
+        return RedisResponse(payload=RESPEncoder.array())
+        #return RedisResponse(response=[], length='0', command=request.command)
 
     result: List[str] = []
 
@@ -191,9 +209,11 @@ def handle_lpop_command(request: RedisRequest) -> RedisRequest:
     else:
         element: str = redis_value.value.popleft()
 
-        return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
+        return RedisResponse(payload=RESPEncoder.bulk_string(value=element))
+        #return RedisResponse(response=element, length=f"{len(element)}", command=request.command)
 
-    return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
+    return RedisResponse(payload=RESPEncoder.array(values=result))
+    #return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
 def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     """ Handler for LRANGE command. """
@@ -202,7 +222,7 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     redis_value = get_valid_value(key)
 
     if redis_value is None:
-        return RedisResponse(response=[], length='0', command=request.command)
+        return RedisResponse(payload=RESPEncoder.array())
     
     value_length: int = len(redis_value.value)
     start_index: int = int(request.data[1]) if int(request.data[1]) >= 0 else value_length + int(request.data[1])
@@ -212,10 +232,10 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
         start_index = 0
 
     if start_index > end_index:
-        return RedisResponse(response=[], length='0', command=request.command)
+        return RedisResponse(payload=RESPEncoder.array())
 
     if start_index >= value_length:
-        return RedisResponse(response=[], length='0', command=request.command)
+        return RedisResponse(payload=RESPEncoder.array())
     
     if end_index >= value_length:
         end_index = value_length - 1
@@ -225,16 +245,18 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
     for i in range(start_index, end_index+1):
         result.append(redis_value.value[i])
 
-    return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
+    return RedisResponse(payload=RESPEncoder.array(values=result))
+    #return RedisResponse(response=result, length=f"{len(result)}", command=request.command)
 
-def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisResponse:
+def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> Optional[RedisResponse]:
     """Validate entry ids for XADD command. """
 
     if sequence_id == "0-0":
-        return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
+        return RedisResponse(payload=RESPEncoder.error(message="ERR The ID specified in XADD must be greater than 0-0"))
+        #return RedisResponse(command="xadd", error="ERR The ID specified in XADD must be greater than 0-0")
 
     if redis_value is None:
-        return RedisResponse()
+        return None
     
     seq_id_split: List[str] = sequence_id.split("-")
     req_ms_time: int = int(seq_id_split[0])
@@ -246,13 +268,15 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> RedisRespon
     seq_num: int = int(id_split[1])
 
     if ms_time > req_ms_time:
-        return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
+        return RedisResponse(payload=RESPEncoder.error(message="ERR The ID specified in XADD is equal or smaller than the target stream top item"))
+        #return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
     
     if ms_time == req_ms_time:
         if seq_num >= req_seq_num:
-            return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
+            return RedisResponse(payload=RESPEncoder.error(message="ERR The ID specified in XADD is equal or smaller than the target stream top item"))
+            #return RedisResponse(command="xadd", error="ERR The ID specified in XADD is equal or smaller than the target stream top item")
     
-    return RedisResponse()
+    return None
 
 def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     """ Handle for auto-generating sequence numbers. """
@@ -298,7 +322,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     unique_id: str = generate_sequence_numbers(redis_value, values[0])
     id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
 
-    if id_check.error:
+    if id_check is not None:
         return id_check
 
     if redis_value is None:
@@ -309,10 +333,12 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         )
         DATA_STORE[key] = redis_value
 
-        return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
+        return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
+        #return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
     
     redis_value.value.append((unique_id, values[1], values[2]))
-    return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
+    return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
+    # return RedisResponse(response=unique_id, length=len(unique_id), command=request.command)
     
     # for idx in range(0, len(values), 3):
     #     print(f"id: {values[idx]}")

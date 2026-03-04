@@ -13,34 +13,65 @@ class TcpServer:
         """ Read, processes and responds to a single client connection. """
         print(f"Accepted connection on {addr}")
 
+        # Use a bytearray as a per-connection buffer
+        buffer: bytearray = bytearray()
+
         try:
             while True:
-                try:
-                    raw_data = conn.recv(1024).decode()
-                    print("=============================================================")
+                #try:
+                # 1. Read a chunk of raw bytes
+                chunk = conn.recv(1024).decode()
+                print("=============================================================")
 
-                    if not raw_data:
-                        print(f"No data received from {addr}")
+                if not chunk:
+                    print(f"No data received from {addr}")
+                    break
+
+                buffer.extend(chunk)
+
+                # 2. Parse as many commands as possible
+                # This handles the case where multiple commands are sent at once (pipelining)
+                while True:
+                    request, consumed = RedisRequest.parse_from_buffer(buffer)
+
+                    if request is None:
+                        # Buffer doesn't have a full command yet, wait for more recv()
                         break
 
-                    request = RedisRequest.from_raw_data(raw_data)
-                    if not request.command:
-                        continue
-                    
-                    print(f"request: {request}")
-                    print(f"request command: {request.command}")
+                    # 3. Remove the processed bytes from buffer
+                    del buffer[:consumed]
 
-                    response = Router(command=request.command).route(request=request)
-                    print(f"response: {response}")
+                    print(f"Processing: {request.command} {request.data}")
 
-                    # 4. Send Response
-                    if response:
-                        conn.sendall(response.to_bytes())
+                    # 4. Route and Respond
+                    try:
+                        response = Router.route(request)
 
-                except (ConnectionResetError, BrokenPipeError):
-                    print(f"Client {addr} disconnected abruptly.")
-                except Exception as e:
-                    print(f"Error handling client: {e}")
+                        if response:
+                            conn.sendall(response.to_bytes())
+                    except Exception as e:
+                        print(f"Handler Error: {e}")
+                        # Send an error back to client so they aren't hanging
+                        conn.sendall(f"-ERR {str(e)}\r\n".encode())
+
+                    # request = RedisRequest.from_raw_data(raw_data)
+                    # if not request.command:
+                    #     continue
+
+                    # print(f"request: {request}")
+                    # print(f"request command: {request.command}")
+
+                    # response = Router(command=request.command).route(request=request)
+                    # print(f"response: {response}")
+
+                    # # 4. Send Response
+                    # if response:
+                    #     conn.sendall(response.to_bytes())
+
+        except (ConnectionResetError, BrokenPipeError):
+            print(f"Client {addr} disconnected abruptly.")
+        except Exception as e:
+            print(f"Internal Error: {e}")
         finally:
             # Close connection when done
             conn.close()
@@ -59,6 +90,7 @@ class TcpServer:
                     target= self.handle_client,
                     args= (conn, addr)
                 )
+                client_thread.daemon = True # Ensure thread closes if main exits
                 client_thread.start()
             except Exception as e:
                 print(f"Error acception connection: {e}")
