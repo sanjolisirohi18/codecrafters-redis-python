@@ -55,20 +55,6 @@ class TcpServer:
                         # Send an error back to client so they aren't hanging
                         conn.sendall(f"-ERR {str(e)}\r\n".encode())
 
-                    # request = RedisRequest.from_raw_data(raw_data)
-                    # if not request.command:
-                    #     continue
-
-                    # print(f"request: {request}")
-                    # print(f"request command: {request.command}")
-
-                    # response = Router(command=request.command).route(request=request)
-                    # print(f"response: {response}")
-
-                    # # 4. Send Response
-                    # if response:
-                    #     conn.sendall(response.to_bytes())
-
         except (ConnectionResetError, BrokenPipeError):
             print(f"Client {addr} disconnected abruptly.")
         except Exception as e:

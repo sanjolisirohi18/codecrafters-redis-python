@@ -1,4 +1,4 @@
-from typing import Dict, Callable, List
+from typing import Dict, Callable
 
 from .models import RedisResponse, RedisRequest
 from .protocols import RESPEncoder
@@ -34,25 +34,7 @@ ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
 
 class Router:
     """ Maps requests to specific handler functions. """
-    
-    # def __init__(self, command = None, data = None):
-    #     self.command: str = command
-    #     self.data: List[str] = data
-    #     self.routes: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
-    #         "ping": handle_ping_command,
-    #         "echo": handle_echo_command,
-    #         "set": handle_set_command,
-    #         "get": handle_get_command,
-    #         "rpush": handle_rpush_command,
-    #         "lpush": handle_lpush_command,
-    #         "lrange": handle_lrange_command,
-    #         "llen": handle_llen_command,
-    #         "lpop": handle_lpop_command,
-    #         "blpop": handle_blpop_command,
-    #         "type": handle_type_command,
-    #         "xadd": handle_xadd_command
-    #     }
-    
+
     @staticmethod
     def route(request: RedisRequest) -> RedisResponse:
         """ Dispatches the request to the correct handler based on the path."""
