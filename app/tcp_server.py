@@ -20,7 +20,7 @@ class TcpServer:
             while True:
                 #try:
                 # 1. Read a chunk of raw bytes
-                chunk = conn.recv(1024).decode()
+                chunk = conn.recv(1024)
                 print("=============================================================")
 
                 if not chunk:

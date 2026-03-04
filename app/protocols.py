@@ -11,7 +11,7 @@ class RESPEncoder():
     
     @staticmethod
     def error(message: str) -> bytes:
-        return f"-{message}\r\n".enocde()
+        return f"-{message}\r\n".encode()
     
     @staticmethod
     def bulk_string(value: str | None) -> str:
@@ -25,7 +25,7 @@ class RESPEncoder():
     @staticmethod
     def integer(value: int) -> str:
         """ Generate integer response. """
-        return f":{len(value)}\r\n".encode()
+        return f":{value}\r\n".encode()
     
     @staticmethod
     def array(values: List[str] | None) -> str:
