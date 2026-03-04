@@ -37,6 +37,8 @@ class RedisRequest:
         Returns (RedisRequest, bytes_consumed) if successful.
         Returns (None, 0) if the buffer is incomplete.
         """
+        if not buffer:
+            return None, 0
 
         # Basic RESP Array check: *<count>\r\n
         # 1. Check for the start of an array
@@ -54,7 +56,7 @@ class RedisRequest:
         
         try:
             num_elements = int(buffer[1:first_crlf])
-        except (ValueError, IndexError):
+        except ValueError:
             return None, len(buffer)
         
         # Each element in a Redis command array is a Bulk String: $<len>\r\n<data>\r\n
@@ -67,7 +69,7 @@ class RedisRequest:
         #     return None, 0
         
         # Extract Values
-        cursor =first_crlf + 2
+        cursor = first_crlf + 2
         actual_values= []
         #bytes_consumed = len(lines[0]) + 2 # Start with header length + \r\n
         print(f"num_elements: {num_elements}")
