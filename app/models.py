@@ -63,6 +63,8 @@ class RedisRequest:
         # Extract Values
         actual_values: List[str] = []
         bytes_consumed: int = len(lines[0]) + 2 # Start with header length + \r\n
+        print(f"num_elements: {num_elements}")
+        print(f"type of num_elements: {type(num_elements)}")
 
         for i in range(num_elements):
             # Indexing: line 1 is $len, line 2 is data, line3 is $len...
