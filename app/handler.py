@@ -398,6 +398,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     values: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
 
+    print(f"key: {key}")
     print(f"values: {values}")
     print(f"redis_value: {redis_value}")
 
