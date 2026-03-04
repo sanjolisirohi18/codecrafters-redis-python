@@ -30,14 +30,11 @@ class RESPEncoder():
     @staticmethod
     def array(values: List[str] | None) -> str:
         """ Generate array response. """
-        print(f"array_values: {values}")
 
         if values is None:
             return f"*-1\r\n".encode()
         
         encoded_elements: List[bytes] = [RESPEncoder.bulk_string(v) for v in values]
-        print(f"encoded_elements: {encoded_elements}")
         header: bytes = f"*{len(values)}\r\n".encode()
-        print(f"output: {header + b"".join(encoded_elements)}")
 
         return header + b"".join(encoded_elements)

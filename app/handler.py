@@ -74,7 +74,6 @@ def handle_get_command(request: RedisRequest) -> RedisResponse:
 
     key: str = request.data[0]
     redis_value: str = get_valid_value(key) 
-    print(f"value: {redis_value}")
 
     if redis_value is None:
         return RedisResponse(payload=RESPEncoder.bulk_string(None))
@@ -255,16 +254,8 @@ def validate_entry_ids(redis_value: RedisValue, sequence_id: str) -> Optional[Re
 
     if redis_value is None:
         return None
-    
-    # seq_id_split: List[str] = sequence_id.split("-")
-    # req_ms_time: int = int(seq_id_split[0])
-    # req_seq_num: int = int(seq_id_split[1])
+
     req_ms_time, req_seq_num = id_split(sequence_id)
-    
-    # id: str = redis_value.value[-1][0]
-    # id_split: List[str] = id.split("-")
-    # ms_time: int = int(id_split[0])
-    # seq_num: int = int(id_split[1])
     ms_time, seq_num = id_split(redis_value.value[-1][0])
 
     if ms_time > req_ms_time:
@@ -296,10 +287,6 @@ def generate_sequence_numbers(redis_value: RedisValue, sequence_id: str) -> str:
     if redis_value is None:
         return f"{req_ms_time}-0"
 
-    # id: str = redis_value.value[-1][0]
-    # id_split: List[str] = id.split("-")
-    # ms_time: int = int(id_split[0])
-    # seq_num: int = int(id_split[1])
     ms_time, seq_num = id_split(redis_value.value[-1][0])
 
     if ms_time == req_ms_time:
@@ -313,10 +300,6 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
     key: str = request.data[0]
     values: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
-
-    print(f"key: {key}")
-    print(f"value: {values}")
-    print(f"redis_value: {redis_value}")
 
     unique_id: str = generate_sequence_numbers(redis_value, values[0])
     id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
@@ -397,11 +380,6 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     start_id: str = validate_xrange_id(id=request.data[1:][0], type="start")
     end_id: str = validate_xrange_id(id=request.data[1:][1], type="end")
 
-    print(f"start_id: {start_id}")
-    print(f"end_id: {end_id}")
-    # start_ts, start_seq_num = id_split(redis_id=start_id)
-
-    # end_ts, end_seq_num = id_split(redis_id=end_id)
     matching_entries: List[Any] = []
 
     for entry in redis_value.value:
@@ -413,24 +391,6 @@ def handle_xrange_command(request: RedisRequest) -> RedisResponse:
     # Build outer array header manually (entries are pre-encoded bytes)
     header: bytes = f"*{len(matching_entries)}\r\n".encode()
     encoded_bytes: bytes = header + b"".join(matching_entries)
-
-    # for value in redis_value.value:
-    #     redis_id: str = value[0]
-    #     redis_key: str = value[1]
-    #     redis_key_value: str = value[2]
-
-    #     redis_id_ts, redis_id_seq_num = id_split(redis_id)
-
-    #     if redis_id_ts >= start_ts and redis_id_ts <= end_ts:
-    #         if redis_id_seq_num >= start_seq_num and redis_id_seq_num <= end_seq_num:
-    #             #output: List[Any] = [RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value)]
-    #             #result.append(output)
-    #             result.append(RESPEncoder.bulk_string(value=redis_id))
-    #             result.append(RESPEncoder.bulk_string(value=redis_key))
-    #             result.append(RESPEncoder.bulk_string(value=redis_key_value))
-    #             #result.append(RESPEncoder.bulk_string(value=redis_id), RESPEncoder.bulk_string(value=redis_key), RESPEncoder.bulk_string(value=redis_key_value))
-    
-    # encoded_bytes: bytes = RESPEncoder.array(values=result)
 
     return RedisResponse(payload=encoded_bytes)
 
