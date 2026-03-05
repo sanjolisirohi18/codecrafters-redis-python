@@ -353,7 +353,7 @@ def is_id_in_xrange(redis_id: str, start_id: str, end_id: str) -> bool:
 
 def encode_stream_entry(entry: Tuple) -> bytes:
     """
-    Encode a single steam as RESP. 
+    Encode a single stream as RESP. 
     """
     entry_id: str = entry[0]
     fields: List[str] = entry[1:]
@@ -423,6 +423,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     start_id: str = validate_xrange_id(id=values[0], type="start")
 
     for entry in redis_value.value:
+        print(f"entry: {entry}")
         redis_id: str = entry[0]
 
         if is_id_in_xread(redis_id, start_id):
