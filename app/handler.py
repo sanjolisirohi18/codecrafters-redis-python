@@ -439,7 +439,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     if not multiple_steam_entries:
         return RedisResponse(payload=RESPEncoder.array(None))
     
-    encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode + b"".join(multiple_steam_entries)
+    encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
     
     return RedisResponse(payload=encoded_bytes)
     
