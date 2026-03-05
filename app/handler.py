@@ -419,7 +419,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
         return RedisResponse(payload=RESPEncoder.array(None))
     
     #start_ts, start_seq_num = id_split(start_id)
-    matching_entries: List[Any] = []
+    matching_entries: List[Any] = [RESPEncoder.bulk_string(value=key)]
     start_id: str = validate_xrange_id(id=values[0], type="start")
 
     for entry in redis_value.value:
@@ -427,10 +427,14 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
         redis_id: str = entry[0]
 
         if is_id_in_xread(redis_id, start_id):
-            matching_entries.append(encode_stream_entry(entry))
+            matching_entries.append(RESPEncoder.bulk_string(value=redis_id))
+            matching_entries.append(RESPEncoder.bulk_string(value=entry[1]))
+            matching_entries.append(RESPEncoder.bulk_string(value=entry[2]))
     
-    header: bytes = f"*{len(matching_entries)}\r\n".encode()
-    encoded_bytes: bytes = header + b"".join(matching_entries)
+    # header: bytes = f"*{len(matching_entries)}\r\n".encode()
+    # encoded_bytes: bytes = header + b"".join(matching_entries)
+    encoded_bytes: bytes = b"".join(matching_entries)
+    print(f"encoded_bytes: {encoded_bytes}")
 
     return RedisResponse(payload=encoded_bytes)
 
