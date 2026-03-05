@@ -432,7 +432,8 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     print(f"matching entires: {b"".join(matching_entries)}")
     
     header: bytes = f"*{len(matching_entries)}\r\n".encode()
-    encoded_bytes: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
+    single_stream_response: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
+    encoded_bytes: bytes = b"*1\r\n" + single_stream_response
 
     return RedisResponse(payload=encoded_bytes)
 
