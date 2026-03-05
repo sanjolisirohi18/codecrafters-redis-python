@@ -430,7 +430,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             matching_entries.append(encode_stream_entry(entry))
     
     header: bytes = f"*{len(matching_entries)}\r\n".encode()
-    encoded_bytes: bytes = header + b"".join(matching_entries)
+    encoded_bytes: bytes = b"*1\r\n" + header + b"".join(matching_entries)
 
     return RedisResponse(payload=encoded_bytes)
 
