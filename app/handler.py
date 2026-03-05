@@ -406,6 +406,7 @@ def is_id_in_xread(redis_id: str, start_id: str) -> bool:
 
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
+    print(f"request.data: {request.data}")
     
     key: str = request.data[1]
     values: List[str] = request.data[2:]
@@ -417,8 +418,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
 
     if redis_value is None or redis_value.type != RedisType.STREAM:
         return RedisResponse(payload=RESPEncoder.array(None))
-    
-    #start_ts, start_seq_num = id_split(start_id)
+
     matching_entries: List[Any] = []
     start_id: str = validate_xrange_id(id=values[0], type="start")
 
