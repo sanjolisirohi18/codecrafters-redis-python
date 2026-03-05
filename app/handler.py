@@ -406,7 +406,6 @@ def is_id_in_xread(redis_id: str, start_id: str) -> bool:
 
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
-    print(f"request.data: {request.data}")
     stream_idx: int = 0
 
     for idx, value in enumerate(request.data):
@@ -418,8 +417,6 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     num_streams = len(stream_values) // 2
     keys: List[str] = stream_values[:num_streams]
     ids: List[str] = stream_values[num_streams:]
-    print(f"keys: {keys}")
-    print(f"ids: {ids}")
 
     multiple_steam_entries: List[Any] = []
 
@@ -428,7 +425,6 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
         id: str = ids[idx]
 
         redis_value = get_valid_value(key)
-        print(f"redis_value: {redis_value}")
 
         if redis_value is None or redis_value.type != RedisType.STREAM:
             continue
@@ -437,7 +433,6 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
         start_id: str = validate_xrange_id(id=id, type="start")
 
         for entry in redis_value.value:
-            print(f"entry: {entry}")
             redis_id: str = entry[0]
 
             if is_id_in_xread(redis_id, start_id):
@@ -454,32 +449,4 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
     
     return RedisResponse(payload=encoded_bytes)
-    
-    # key: str = request.data[1]
-    # values: List[str] = request.data[2:]
-    # redis_value = get_valid_value(key)
-
-    # print(f"key: {key}")
-    # print(f"values: {values}")
-    # print(f"redis_value: {redis_value}")
-
-    # if redis_value is None or redis_value.type != RedisType.STREAM:
-    #     return RedisResponse(payload=RESPEncoder.array(None))
-
-    # matching_entries: List[Any] = []
-    # start_id: str = validate_xrange_id(id=values[0], type="start")
-
-    # for entry in redis_value.value:
-    #     print(f"entry: {entry}")
-    #     redis_id: str = entry[0]
-
-    #     if is_id_in_xread(redis_id, start_id):
-    #         matching_entries.append(encode_stream_entry(entry))
-    
-    # header: bytes = f"*{len(matching_entries)}\r\n".encode()
-    # single_stream_response: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
-    # encoded_bytes: bytes = b"*1\r\n" + single_stream_response
-
-    # return RedisResponse(payload=encoded_bytes)
-
 
