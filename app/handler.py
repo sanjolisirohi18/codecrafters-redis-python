@@ -407,6 +407,11 @@ def is_id_in_xread(redis_id: str, start_id: str) -> bool:
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
     print(f"request.data: {request.data}")
+    stream_values: List[str] = request.data[1:]
+
+    for idx in range(len(stream_values) - 1):
+        print(f"key: {stream_values[idx]}")
+        print(f"id: {stream_values[idx+2]}")
     
     key: str = request.data[1]
     values: List[str] = request.data[2:]
