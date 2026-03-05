@@ -407,16 +407,28 @@ def is_id_in_xread(redis_id: str, start_id: str) -> bool:
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
     print(f"request.data: {request.data}")
-    stream_values: List[str] = request.data[1:]
+    stream_idx: int = 0
+
+    for idx, value in enumerate(request.data):
+        if value == "streams":
+            stream_idx = idx
+            break
+    
+    stream_values: List[str] = request.data[stream_idx+1: ]
+    num_streams = len(stream_values) // 2
+    keys: List[str] = stream_values[:num_streams]
+    ids: List[str] = stream_values[num_streams:]
+    print(f"keys: {keys}")
+    print(f"ids: {ids}")
+
     multiple_steam_entries: List[Any] = []
 
-    for idx in range(len(stream_values) - 2):
-        print(f"key: {stream_values[idx]}")
-        print(f"id: {stream_values[idx+2]}")
-        key: str = stream_values[idx]
-        id: str = stream_values[idx+2]
+    for idx  in range(num_streams):
+        key: str = keys[idx]
+        id: str = ids[idx]
 
         redis_value = get_valid_value(key)
+        print(f"redis_value: {redis_value}")
 
         if redis_value is None or redis_value.type != RedisType.STREAM:
             continue
