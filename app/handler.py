@@ -409,7 +409,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
     print(f"request.data: {request.data}")
     stream_values: List[str] = request.data[1:]
 
-    for idx in range(len(stream_values) - 1):
+    for idx in range(len(stream_values) - 2):
         print(f"key: {stream_values[idx]}")
         print(f"id: {stream_values[idx+2]}")
     
