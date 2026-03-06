@@ -414,6 +414,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             break
     
     print(f"block: {request.data[:stream_idx]}")
+    block_timeout: int = int(request.data[:stream_idx][1])
     stream_values: List[str] = request.data[stream_idx+1: ]
     num_streams = len(stream_values) // 2
     keys: List[str] = stream_values[:num_streams]
@@ -421,33 +422,48 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
 
     multiple_steam_entries: List[Any] = []
 
-    for idx  in range(num_streams):
-        key: str = keys[idx]
-        id: str = ids[idx]
+    with DATA_CONDITION:
+        start_wait = datetime.now()
+        while True:
+            for idx  in range(num_streams):
+                key: str = keys[idx]
+                id: str = ids[idx]
 
-        redis_value = get_valid_value(key)
+                redis_value = get_valid_value(key)
 
-        if redis_value is None or redis_value.type != RedisType.STREAM:
-            continue
+                if redis_value is None or redis_value.type != RedisType.STREAM:
+                    continue
 
-        matching_entries: List[Any] = []
-        start_id: str = validate_xrange_id(id=id, type="start")
+                matching_entries: List[Any] = []
+                start_id: str = validate_xrange_id(id=id, type="start")
 
-        for entry in redis_value.value:
-            redis_id: str = entry[0]
+                for entry in redis_value.value:
+                    redis_id: str = entry[0]
 
-            if is_id_in_xread(redis_id, start_id):
-                matching_entries.append(encode_stream_entry(entry))
+                    if is_id_in_xread(redis_id, start_id):
+                        matching_entries.append(encode_stream_entry(entry))
+                
+                if matching_entries:
+                    header: bytes = f"*{len(matching_entries)}\r\n".encode()
+                    single_stream_response: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
+                    multiple_steam_entries.append(single_stream_response)
+            
+            if not multiple_steam_entries:
+                return RedisResponse(payload=RESPEncoder.array(None))
+            
+            if multiple_steam_entries:
+                encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
+                
+                return RedisResponse(payload=encoded_bytes)
         
-        if matching_entries:
-            header: bytes = f"*{len(matching_entries)}\r\n".encode()
-            single_stream_response: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
-            multiple_steam_entries.append(single_stream_response)
-    
-    if not multiple_steam_entries:
-        return RedisResponse(payload=RESPEncoder.array(None))
-    
-    encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
-    
-    return RedisResponse(payload=encoded_bytes)
+            if block_timeout > 0:
+                elapsed = (datetime.now() - start_wait).total_seconds()
+                remaining = block_timeout - elapsed
+
+                if remaining <= 0:
+                    return RedisResponse(payload=RESPEncoder.array(None))
+                
+                DATA_CONDITION.wait(timeout=remaining)
+            else:
+                DATA_CONDITION.wait()
 
