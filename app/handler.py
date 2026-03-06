@@ -414,7 +414,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             break
     
     print(f"block: {request.data[:stream_idx]}")
-    block_timeout: int = int(request.data[:stream_idx][1])
+    block_timeout: Optional[int] = int(request.data[:stream_idx][1])
     stream_values: List[str] = request.data[stream_idx+1: ]
     num_streams = len(stream_values) // 2
     keys: List[str] = stream_values[:num_streams]
@@ -459,6 +459,9 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
                 
                 return RedisResponse(payload=encoded_bytes)
+            
+            if block_timeout is None:
+                return RedisResponse(payload=RESPEncoder.bulk_string(None))
         
             if block_timeout > 0:
                 elapsed = (datetime.now() - start_wait).total_seconds()
