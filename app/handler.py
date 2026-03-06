@@ -299,27 +299,29 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
 
     key: str = request.data[0]
     values: List[str] = request.data[1:]
-    redis_value = get_valid_value(key)
+    
+    with DATA_CONDITION:
+        redis_value = get_valid_value(key)
 
-    unique_id: str = generate_sequence_numbers(redis_value, values[0])
-    id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
+        unique_id: str = generate_sequence_numbers(redis_value, values[0])
+        id_check: RedisResponse = validate_entry_ids(redis_value, unique_id)
 
-    if id_check is not None:
-        return id_check
+        if id_check is not None:
+            return id_check
 
-    if redis_value is None:
-        
-        redis_value = RedisValue(
-            value=deque([(unique_id, values[1], values[2])]),
-            type= RedisType.STREAM
-        )
-        DATA_STORE[key] = redis_value
+        if redis_value is None:
+            
+            redis_value = RedisValue(
+                value=deque([(unique_id, values[1], values[2])]),
+                type= RedisType.STREAM
+            )
+            DATA_STORE[key] = redis_value
 
-        return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
-    else:
-        redis_value.value.append((unique_id, values[1], values[2]))
+            return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
+        else:
+            redis_value.value.append((unique_id, values[1], values[2]))
 
-    DATA_CONDITION.notify_all()
+        DATA_CONDITION.notify_all()
     return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
 
 def validate_xrange_id(id: str, type: str = "start") -> str:
