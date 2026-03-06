@@ -413,6 +413,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             stream_idx = idx
             break
     
+    print(f"block: {request.data[:stream_idx]}")
     stream_values: List[str] = request.data[stream_idx+1: ]
     num_streams = len(stream_values) // 2
     keys: List[str] = stream_values[:num_streams]
