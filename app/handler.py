@@ -444,7 +444,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                         print(f"found $")
                         start_id = redis_value.value[-1][0] if redis_value.value else "0-0"
                         print(f"start_id after $: {start_id}")
-                    start_id: str = validate_xrange_id(id=id, type="start")
+                    start_id: str = validate_xrange_id(id=start_id, type="start")
                     print(f"start_id: {start_id}")
 
                     for entry in redis_value.value:
