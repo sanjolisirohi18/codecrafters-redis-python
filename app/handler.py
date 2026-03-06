@@ -433,6 +433,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             for idx  in range(num_streams):
                 key: str = keys[idx]
                 id: str = ids[idx]
+                print(f"id: {id}")
 
                 redis_value = get_valid_value(key)
                 
