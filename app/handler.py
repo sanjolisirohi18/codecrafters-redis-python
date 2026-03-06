@@ -396,13 +396,13 @@ def is_id_in_xread(redis_id: str, start_id: str) -> bool:
     redis_id_ts, redis_id_seq_num = id_split(redis_id)
     start_ts, start_seq_num = id_split(start_id)
     
-    if start_ts > redis_id_ts:
-        return False
+    if redis_id_ts > start_ts:
+        return True
     
-    if start_ts == redis_id_ts and start_seq_num > redis_id_seq_num:
-        return False
+    if start_ts == redis_id_ts and redis_id_seq_num > start_seq_num:
+        return True
     
-    return True
+    return False
 
 def handle_xread_command(request: RedisRequest) -> RedisResponse:
     """ Handler for XREAD command. """
