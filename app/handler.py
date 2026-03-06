@@ -439,6 +439,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 if redis_value and redis_value.type == RedisType.STREAM:
                     matching_entries: List[Any] = []
                     start_id: str = validate_xrange_id(id=id, type="start")
+                    print(f"start_id: {start_id}")
 
                     for entry in redis_value.value:
                         redis_id: str = entry[0]
