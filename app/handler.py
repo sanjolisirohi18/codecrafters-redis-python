@@ -299,7 +299,7 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
 
     key: str = request.data[0]
     values: List[str] = request.data[1:]
-    
+
     with DATA_CONDITION:
         redis_value = get_valid_value(key)
 
@@ -465,7 +465,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 return RedisResponse(payload=encoded_bytes)
             
             if block_timeout is None:
-                return RedisResponse(payload=RESPEncoder.bulk_string(None))
+                return RedisResponse(payload=RESPEncoder.array(None))
         
             if block_timeout > 0:
                 elapsed = (datetime.now() - start_wait).total_seconds()
