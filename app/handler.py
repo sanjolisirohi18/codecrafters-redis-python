@@ -459,15 +459,15 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             
             if block_timeout is None:
                 return RedisResponse(payload=RESPEncoder.array(None))
-        
+
+            elapsed = (datetime.now() - start_wait).total_seconds() * 1000
             if block_timeout > 0:
-                elapsed = (datetime.now() - start_wait).total_seconds() * 1000
                 remaining = block_timeout - elapsed
 
                 if remaining <= 0:
                     return RedisResponse(payload=RESPEncoder.array(None))
                 
-                DATA_CONDITION.wait(timeout=remaining)
+                DATA_CONDITION.wait(timeout=remaining / 1000)
             else:
                 DATA_CONDITION.wait()
 
