@@ -438,10 +438,6 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 redis_value = get_valid_value(key)
                 
                 if redis_value and redis_value.type == RedisType.STREAM:
-
-                # if redis_value is None or redis_value.type != RedisType.STREAM:
-                #     continue
-
                     matching_entries: List[Any] = []
                     start_id: str = validate_xrange_id(id=id, type="start")
 
@@ -456,9 +452,6 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                         single_stream_response: bytes = b"*2\r\n" + RESPEncoder.bulk_string(key) + header + b"".join(matching_entries)
                         multiple_steam_entries.append(single_stream_response)
             
-            # if not multiple_steam_entries:
-            #     return RedisResponse(payload=RESPEncoder.array(None))
-            
             if multiple_steam_entries:
                 encoded_bytes: bytes = f"*{len(multiple_steam_entries)}\r\n".encode() + b"".join(multiple_steam_entries)
                 
@@ -468,7 +461,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 return RedisResponse(payload=RESPEncoder.array(None))
         
             if block_timeout > 0:
-                elapsed = (datetime.now() - start_wait).total_seconds()
+                elapsed = (datetime.now() - start_wait).total_seconds() * 1000
                 remaining = block_timeout - elapsed
 
                 if remaining <= 0:
