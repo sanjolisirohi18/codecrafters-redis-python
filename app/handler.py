@@ -316,8 +316,10 @@ def handle_xadd_command(request: RedisRequest) -> RedisResponse:
         DATA_STORE[key] = redis_value
 
         return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
-    
-    redis_value.value.append((unique_id, values[1], values[2]))
+    else:
+        redis_value.value.append((unique_id, values[1], values[2]))
+
+    DATA_CONDITION.notify_all()
     return RedisResponse(payload=RESPEncoder.bulk_string(value=unique_id))
 
 def validate_xrange_id(id: str, type: str = "start") -> str:
