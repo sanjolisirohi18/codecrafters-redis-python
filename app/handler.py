@@ -418,7 +418,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             break
     
     print(f"block: {request.data[:stream_idx]}")
-    block_timeout: Optional[int] = int(request.data[:stream_idx][1])
+    block_timeout: Optional[int] = int(request.data[:stream_idx][1]) if request.data[:stream_idx] else None
     stream_values: List[str] = request.data[stream_idx+1: ]
     num_streams = len(stream_values) // 2
     keys: List[str] = stream_values[:num_streams]
