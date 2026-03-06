@@ -460,7 +460,7 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                     for entry in redis_value.value:
                         redis_id: str = entry[0]
 
-                        if is_id_in_xread(redis_id, start_id):
+                        if is_id_in_xread(redis_id, id):
                             matching_entries.append(encode_stream_entry(entry))
                     
                     if matching_entries:
