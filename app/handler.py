@@ -449,18 +449,13 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
                 
                 if redis_value and redis_value.type == RedisType.STREAM:
                     matching_entries: List[Any] = []
-                    # start_id: str = id
-                    # if id == "$":
-                    #     print(f"found $")
-                    #     start_id = redis_value.value[-1][0] if redis_value.value else "0-0"
-                    #     print(f"start_id after $: {start_id}")
                     start_id: str = validate_xrange_id(id=id, type="start")
                     print(f"start_id: {start_id}")
 
                     for entry in redis_value.value:
                         redis_id: str = entry[0]
 
-                        if is_id_in_xread(redis_id, id):
+                        if is_id_in_xread(redis_id, start_id):
                             matching_entries.append(encode_stream_entry(entry))
                     
                     if matching_entries:
