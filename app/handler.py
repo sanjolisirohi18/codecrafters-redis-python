@@ -496,6 +496,10 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
     print(f"Redis value: {redis_value}")
 
     if redis_value is None:
+        DATA_STORE[key] = RedisValue(
+            value = "1",
+            type= RedisType.STRING
+        )
         return RedisResponse(payload=RESPEncoder.integer(value=1))
 
     result: int = int(redis_value.value) + 1
