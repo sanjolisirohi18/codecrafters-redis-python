@@ -493,6 +493,7 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
     key: str = request.data[0]
     # values: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
+    print(f"Redis value: {redis_value}")
 
     if redis_value is None:
         return RedisResponse(payload=RESPEncoder.integer(value=1))
