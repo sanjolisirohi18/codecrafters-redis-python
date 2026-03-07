@@ -503,5 +503,6 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
         return RedisResponse(payload=RESPEncoder.integer(value=1))
 
     result: int = int(redis_value.value) + 1
+    redis_value.value = result
 
     return RedisResponse(payload=RESPEncoder.integer(value=result))
