@@ -501,8 +501,10 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
             type= RedisType.STRING
         )
         return RedisResponse(payload=RESPEncoder.integer(value=1))
-
-    result: int = int(redis_value.value) + 1
-    redis_value.value = str(result)
+    elif not redis_value.value.isdigit():
+        return RedisResponse(payload=RESPEncoder.error(message="ERR value is not an integer or out of range"))
+    else:
+        result: int = int(redis_value.value) + 1
+        redis_value.value = str(result)
 
     return RedisResponse(payload=RESPEncoder.integer(value=result))
