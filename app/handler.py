@@ -491,7 +491,6 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
     """ Hanlder for INCR command. """
 
     key: str = request.data[0]
-    # values: List[str] = request.data[1:]
     redis_value = get_valid_value(key)
     print(f"Redis value: {redis_value}")
 
