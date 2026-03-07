@@ -2,22 +2,7 @@ from typing import Dict, Callable
 
 from .models import RedisResponse, RedisRequest
 from .protocols import RESPEncoder
-from .handler import (
-    handle_ping_command, 
-    handle_echo_command,
-    handle_set_command,
-    handle_get_command,
-    handle_rpush_command,
-    handle_lrange_command,
-    handle_lpush_command,
-    handle_llen_command,
-    handle_lpop_command,
-    handle_blpop_command,
-    handle_type_command,
-    handle_xadd_command,
-    handle_xrange_command,
-    handle_xread_command
-)
+from .handler import *
 
 ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
     "ping": handle_ping_command,
@@ -34,6 +19,7 @@ ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
     "xadd": handle_xadd_command,
     "xrange": handle_xrange_command,
     "xread": handle_xread_command,
+    "incr": handle_incr_command,
 }
 
 class Router:

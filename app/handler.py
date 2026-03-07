@@ -82,19 +82,7 @@ def handle_get_command(request: RedisRequest) -> RedisResponse:
 
     return RedisResponse(payload=encoded_bytes)
 
-def handle_type_command(request: RedisRequest) -> RedisResponse:
-    """ Handler for TYPE command. """
-    key: str = request.data[0]
-    redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
-    encoded_bytes: bytes = b""
-
-    if redis_value is None:
-        encoded_bytes = RESPEncoder.simple_string(value="none")
-    else:
-        encoded_bytes = RESPEncoder.simple_string(value=redis_value.type.value)
-
-    return RedisResponse(payload=encoded_bytes)
-
+# ============================================== LISTS HANDLERS ==============================================
 def handle_rpush_command(request: RedisRequest) -> RedisResponse:
     """ Handler for RPUSH command. """
 
@@ -231,6 +219,21 @@ def handle_lrange_command(request: RedisRequest) -> RedisResponse:
         result.append(redis_value.value[i])
 
     return RedisResponse(payload=RESPEncoder.array(values=result))
+
+# ============================================== STREAMS HANDLERS ==============================================
+
+def handle_type_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for TYPE command. """
+    key: str = request.data[0]
+    redis_value: str = get_valid_value(key) #DATA_STORE.get(key, None)
+    encoded_bytes: bytes = b""
+
+    if redis_value is None:
+        encoded_bytes = RESPEncoder.simple_string(value="none")
+    else:
+        encoded_bytes = RESPEncoder.simple_string(value=redis_value.type.value)
+
+    return RedisResponse(payload=encoded_bytes)
 
 def id_split(redis_id: str) -> Tuple[int, int]:
     """ 
@@ -482,3 +485,15 @@ def handle_xread_command(request: RedisRequest) -> RedisResponse:
             else:
                 DATA_CONDITION.wait()
 
+# ============================================== TRANSACTIONS HANDLERS ==============================================
+
+def handle_incr_command(request: RedisRequest) -> RedisResponse:
+    """ Hanlder for INCR command. """
+
+    key: str = request.data[0]
+    # values: List[str] = request.data[1:]
+    redis_value = get_valid_value(key)
+
+    result: int = int(redis_value.value) + 1
+
+    return RedisResponse(payload=RESPEncoder.integer(value=result))
