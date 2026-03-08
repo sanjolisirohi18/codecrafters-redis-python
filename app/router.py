@@ -20,6 +20,7 @@ ROUTE_MAP: Dict[str, Callable[[RedisRequest], RedisResponse]] = {
     "xrange": handle_xrange_command,
     "xread": handle_xread_command,
     "incr": handle_incr_command,
+    "multi": handle_multi_command,
 }
 
 class Router:
