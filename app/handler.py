@@ -8,6 +8,8 @@ from .models import RedisRequest, RedisResponse, RedisValue, RedisType
 from .protocols import RESPEncoder
 
 DATA_STORE = {}
+MULTI_QUEUE = deque([])
+IS_MULTI: bool = False
 DATA_CONDITION = threading.Condition()
 
 # Handler Functions
@@ -507,3 +509,9 @@ def handle_incr_command(request: RedisRequest) -> RedisResponse:
         redis_value.value = str(result)
 
     return RedisResponse(payload=RESPEncoder.integer(value=result))
+
+def handle_multi_command(request: RedisRequest) -> RedisResponse:
+    """ Handler for MULTI command. """
+    IS_MULTI = True
+
+    return RedisResponse(payload=RESPEncoder.simple_string(value="OK"))
